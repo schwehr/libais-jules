@@ -31,10 +31,7 @@ def checksumStr(data):
     checksum = 0
     for c in data:
       checksum = checksum ^ ord(c)
-    sum_hex = "%x" % checksum
-    if len(sum_hex) == 1:
-      sum_hex = '0' + sum_hex
-    return sum_hex.upper()
+    return "%02X" % checksum
 
 
 def isChecksumValid(nmeaStr, allowTailData=True):
