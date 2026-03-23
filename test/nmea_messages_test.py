@@ -9,6 +9,34 @@ from ais import nmea_messages
 # TODO(schwehr): Test TimeUtc.
 
 
+class FloatSplitTest(unittest.TestCase):
+
+  def testPositive(self):
+    base, frac = nmea_messages.FloatSplit(12.34)
+    self.assertEqual(base, 12)
+    self.assertAlmostEqual(frac, 0.34)
+
+  def testNegative(self):
+    base, frac = nmea_messages.FloatSplit(-12.34)
+    self.assertEqual(base, -12)
+    self.assertAlmostEqual(frac, -0.34)
+
+  def testZero(self):
+    base, frac = nmea_messages.FloatSplit(0.0)
+    self.assertEqual(base, 0)
+    self.assertEqual(frac, 0.0)
+
+  def testWhole(self):
+    base, frac = nmea_messages.FloatSplit(10.0)
+    self.assertEqual(base, 10)
+    self.assertEqual(frac, 0.0)
+
+  def testNegativeWhole(self):
+    base, frac = nmea_messages.FloatSplit(-10.0)
+    self.assertEqual(base, -10)
+    self.assertEqual(frac, 0.0)
+
+
 class AbkTest(unittest.TestCase):
 
   def testRegex(self):
