@@ -290,6 +290,38 @@ class ParseTest(unittest.TestCase):
     self.assertEqual(metadata['time'], 1428885091)
 
 
+class DecodeMultipleTest(unittest.TestCase):
+
+  def test_decode_multiple_success(self):
+    # Valid two-line message split across two payloads.
+    # We construct a mock "message" dict as passed to uscg.DecodeMultiple.
+    message = {
+        'matches': [
+            {'payload': '!SAVDM,2,1,2,A,55@=M<02=rO7<Dm7B20EHE:1<4HEAV2222222217JQHQ:57c0Rk3lp0CQiC1,0*47'},
+            {'payload': '!SAVDM,2,2,2,A,Dp888888880,2*08'}
+        ]
+    }
+
+    decoded = uscg.DecodeMultiple(message)
+    self.assertIsNotNone(decoded)
+    self.assertEqual(decoded['id'], 5)
+    self.assertEqual(decoded['imo_num'], 9300465)
+    self.assertEqual(decoded['mmsi'], 352542000)
+    self.assertEqual(decoded['name'], 'EVER SAFETY         ')
+
+  def test_decode_multiple_error(self):
+    # Error case: Provide only the first line of a two-line message.
+    # The queue won't be able to decode it into exactly one message, thus q.qsize() == 0.
+    message = {
+        'matches': [
+            {'payload': '!SAVDM,2,1,2,A,55@=M<02=rO7<Dm7B20EHE:1<4HEAV2222222217JQHQ:57c0Rk3lp0CQiC1,0*47'}
+        ]
+    }
+
+    decoded = uscg.DecodeMultiple(message)
+    self.assertIsNone(decoded)
+
+
 class UsgsQueueTest(unittest.TestCase):
 
   def setUp(self):
