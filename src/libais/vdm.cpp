@@ -260,29 +260,33 @@ unique_ptr<NmeaSentence> NmeaSentence::Merge(
 }
 
 std::string NmeaSentence::ToString() const {
-  std::string channel;
-  channel += channel_;
-  std::string const sequence(
-      (sequence_number_ != kNoSequenceNumber) ? std::to_string(sequence_number_) : "");
+  std::string result;
+  result.reserve(82);
 
-  std::string result = "";
-  result.append(talker_ + sentence_type_);
-  result.append(",");
-  result.append(std::to_string(sentence_total_));
-  result.append(",");
-  result.append(std::to_string(sentence_number_));
-  result.append(",");
-  result.append(sequence);
-  result.append(",");
-  result.append(channel);
-  result.append(",");
-  result.append(body_);
-  result.append(",");
-  result.append(std::to_string(fill_bits_));
-  std::string const checksum_str = ChecksumHexString(result);
-  result.append("*");
-  result.append(checksum_str);
-  return "!" + result;
+  result += '!';
+  result += talker_;
+  result += sentence_type_;
+  result += ',';
+  result += std::to_string(sentence_total_);
+  result += ',';
+  result += std::to_string(sentence_number_);
+  result += ',';
+  if (sequence_number_ != kNoSequenceNumber) {
+    result += std::to_string(sequence_number_);
+  }
+  result += ',';
+  result += channel_;
+  result += ',';
+  result += body_;
+  result += ',';
+  result += std::to_string(fill_bits_);
+
+  // Checksum includes everything after '!' up to before '*'
+  std::string const checksum_str = ChecksumHexString(result.substr(1));
+
+  result += '*';
+  result += checksum_str;
+  return result;
 }
 
 std::string NmeaSentence::ToMd5Digest() const {
