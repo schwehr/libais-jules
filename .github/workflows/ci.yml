@@ -2,9 +2,9 @@ name: libais CI
 
 on:
   push:
-    branches: [ make ]
+    branches: [ main ]
   pull_request:
-    branches: [ make ]
+    branches: [ main ]
 
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
