@@ -417,5 +417,38 @@ class DecodeTagBlockTest(TagTestCase):
     self.assertEqual(msg['times'], [1428451206, None, None])
 
 
+class DecodeTagSingleTest(TagTestCase):
+
+  def setUp(self):
+    self.valid_payload = '!AIVDM,1,1,,A,14VIk0002sMM04vE>V9jGimn08RP,0*0D'
+
+  def test_happy_path(self):
+    msg = {'matches': [{'payload': self.valid_payload}]}
+    decoded = tag_block.DecodeTagSingle(msg)
+    self.assertIsNotNone(decoded)
+    self.assertIn('md5', decoded)
+    self.assertEqual(decoded.get('id'), 1)
+
+  def test_invalid_parse(self):
+    msg = {'matches': [{'payload': 'INVALID_DATA_NOT_A_VDM_MESSAGE'}]}
+    decoded = tag_block.DecodeTagSingle(msg)
+    self.assertIsNone(decoded)
+
+  def test_multi_line_error(self):
+    msg = {'matches': [{'payload': '!AIVDM,2,1,,A,14VIk0002sMM04vE>V9jGimn08RP,0*0E'}]}
+    decoded = tag_block.DecodeTagSingle(msg)
+    self.assertIsNone(decoded)
+
+  def test_decode_error(self):
+    # This payload should throw DecodeError during ais.decode
+    # Providing too few bits for body by passing bad payload or using mock
+    import unittest.mock as mock
+    import ais
+    msg = {'matches': [{'payload': self.valid_payload}]}
+    with mock.patch('ais.decode', side_effect=ais.DecodeError("decode error")):
+      decoded = tag_block.DecodeTagSingle(msg)
+      self.assertIsNone(decoded)
+
+
 if __name__ == '__main__':
   unittest.main()
