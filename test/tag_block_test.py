@@ -2,7 +2,7 @@
 """Tests for ais.tag_block."""
 
 import unittest
-import unittest.mock as mock
+from unittest import mock
 
 import ais
 from ais import tag_block
