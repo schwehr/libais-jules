@@ -182,7 +182,7 @@ def normalize(nmea=sys.stdin,
     try:
       tagblock, line = parseTagBlock(origline)
 
-      line = line.strip() + '\n'  # Get rid of DOS issues.
+      line = f"{line.strip()}\n"  # Get rid of DOS issues.
       stats["line_num"] += 1
       if len(line) < 7 or line[3:6] not in ('VDM', 'VDO'):
         yield tagblock, line, origline
