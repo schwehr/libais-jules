@@ -2,7 +2,9 @@
 """Tests for ais.tag_block."""
 
 import unittest
+import unittest.mock as mock
 
+import ais
 from ais import tag_block
 
 
@@ -419,8 +421,7 @@ class DecodeTagBlockTest(TagTestCase):
 
 class DecodeTagSingleTest(TagTestCase):
 
-  def setUp(self):
-    self.valid_payload = '!AIVDM,1,1,,A,14VIk0002sMM04vE>V9jGimn08RP,0*0D'
+  valid_payload = '!AIVDM,1,1,,A,14VIk0002sMM04vE>V9jGimn08RP,0*0D'
 
   def test_happy_path(self):
     msg = {'matches': [{'payload': self.valid_payload}]}
@@ -440,12 +441,10 @@ class DecodeTagSingleTest(TagTestCase):
     self.assertIsNone(decoded)
 
   def test_decode_error(self):
-    # This payload should throw DecodeError during ais.decode
-    # Providing too few bits for body by passing bad payload or using mock
-    import unittest.mock as mock
-    import ais
+    # This payload should throw DecodeError during ais.decode.
+    # Providing too few bits for body by passing bad payload or using mock.
     msg = {'matches': [{'payload': self.valid_payload}]}
-    with mock.patch('ais.decode', side_effect=ais.DecodeError("decode error")):
+    with mock.patch.object(ais, 'decode', side_effect=ais.DecodeError("decode error")):
       decoded = tag_block.DecodeTagSingle(msg)
       self.assertIsNone(decoded)
 
