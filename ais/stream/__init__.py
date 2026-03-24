@@ -25,10 +25,6 @@ def ErrorPrinter(e,
     sys.stderr.write('%s\n' % e)
 
 
-# def ErrorRaiser(e, stats, **kw):
-#   raise e
-
-
 class StreamError(Exception):
 
   description = 'Stream error'
