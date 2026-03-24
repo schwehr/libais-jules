@@ -6,7 +6,58 @@ import unittest
 from ais import nmea_messages
 
 
-# TODO(schwehr): Test TimeUtc.
+class TimeUtcTest(unittest.TestCase):
+
+  def testBasic(self):
+    fields = {'hours': '12', 'minutes': '34', 'seconds': '56.789'}
+    nmea_messages.TimeUtc(fields)
+    self.assertEqual(fields['hours'], 12)
+    self.assertEqual(fields['minutes'], 34)
+    self.assertEqual(fields['seconds'], 56)
+    self.assertEqual(fields['microseconds'], 789000)
+    self.assertEqual(fields['when'], datetime.time(12, 34, 56, 789000))
+
+  def testNoFractionalSeconds(self):
+    fields = {'hours': '12', 'minutes': '34', 'seconds': '56'}
+    nmea_messages.TimeUtc(fields)
+    self.assertEqual(fields['hours'], 12)
+    self.assertEqual(fields['minutes'], 34)
+    self.assertEqual(fields['seconds'], 56)
+    self.assertEqual(fields['microseconds'], 0)
+    self.assertEqual(fields['when'], datetime.time(12, 34, 56, 0))
+
+  def testZero(self):
+    fields = {'hours': '00', 'minutes': '00', 'seconds': '00.0'}
+    nmea_messages.TimeUtc(fields)
+    self.assertEqual(fields['hours'], 0)
+    self.assertEqual(fields['minutes'], 0)
+    self.assertEqual(fields['seconds'], 0)
+    self.assertEqual(fields['microseconds'], 0)
+    self.assertEqual(fields['when'], datetime.time(0, 0, 0, 0))
+
+  def testNumericInputs(self):
+    fields = {'hours': 12, 'minutes': 34, 'seconds': 56.789}
+    nmea_messages.TimeUtc(fields)
+    self.assertEqual(fields['hours'], 12)
+    self.assertEqual(fields['minutes'], 34)
+    self.assertEqual(fields['seconds'], 56)
+    self.assertEqual(fields['microseconds'], 789000)
+    self.assertEqual(fields['when'], datetime.time(12, 34, 56, 789000))
+
+  def testMissingTimeRaisesTypeError(self):
+    fields = {'hours': '', 'minutes': '', 'seconds': '00.00'}
+    with self.assertRaises(TypeError):
+        nmea_messages.TimeUtc(fields)
+
+  def testInvalidTypeRaisesTypeError(self):
+    fields = {'hours': None, 'minutes': None, 'seconds': None}
+    with self.assertRaises(TypeError):
+        nmea_messages.TimeUtc(fields)
+
+  def testInvalidValueRaisesValueError(self):
+    fields = {'hours': 'xx', 'minutes': 'yy', 'seconds': 'zz'}
+    with self.assertRaises(ValueError):
+        nmea_messages.TimeUtc(fields)
 
 
 class FloatSplitTest(unittest.TestCase):
