@@ -49,4 +49,5 @@ jobs:
         
       - name: Script
         run: |
+          mkdir build && cd build && cmake .. && make -j 4 && cd ..
           py.test ais test --cov=ais --cov-report term-missing

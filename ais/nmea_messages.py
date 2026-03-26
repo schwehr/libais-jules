@@ -385,6 +385,7 @@ ZDA_RE_STR = (
     r'(?P<year>\d{4})?,'
     r'(?P<zone_hours>[+-]?(\d+))?,'
     r'(?P<zone_minutes>(\d+))?'  # ',?'
+    r'[,]*'
     + NMEA_CHECKSUM_RE_STR
 )
 
