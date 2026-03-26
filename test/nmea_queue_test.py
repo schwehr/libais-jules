@@ -1,6 +1,7 @@
 """Tests for ais.nmea_queue."""
 
 import contextlib
+import datetime
 import unittest
 from io import StringIO
 
@@ -89,7 +90,14 @@ class NmeaQueueTest(unittest.TestCase):
       msgs.append(queue.get())
 
     self.assertEqual(msgs[0],
-                     {'line_nums': [1],
+                     {'decoded': {
+                          'datetime': datetime.datetime(
+                              2009, 7, 12, 20, 30, 3),
+                          'message': 'ZDA',
+                          'talker': 'GP',
+                          'zone_hours': 0,
+                          'zone_minutes': 0},
+                      'line_nums': [1],
                       'line_type': 'BARE',
                       'lines': ['$GPZDA,203003.00,12,07,2009,00,00,*47']})
     self.assertEqual(
@@ -141,9 +149,7 @@ class NmeaQueueTest(unittest.TestCase):
     while not queue.empty():
       msgs.append(queue.get())
 
-    # self.assertNotIn('decoded', msgs[0])
-    # TODO(schwehr): Check the ZDA message decoding.
-    for msg_num in range(1, 5):
+    for msg_num in range(5):
       self.assertIn('decoded', msgs[msg_num])
     ids = [msg['decoded']['id'] for msg in msgs[1:] if 'decoded' in msg]
     self.assertEqual(ids, [11, 5, 5, 3, 27])

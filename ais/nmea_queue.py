@@ -1,7 +1,4 @@
-"""Manage a stream of NMEA messages with optional metadata.
-
-TODO(schwehr): Add support for decoding non-AIS NMEA messages (e.g. ZDA).
-"""
+"""Manage a stream of NMEA messages with optional metadata."""
 import queue as Queue
 
 from ais import nmea
