@@ -49,5 +49,4 @@ jobs:
         
       - name: Script
         run: |
-          (cd src && CC=gcc CXX=g++ make -f Makefile-custom -j 4 test)
           py.test ais test --cov=ais --cov-report term-missing
