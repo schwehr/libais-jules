@@ -100,8 +100,8 @@ MSG_VALIDATION_LOOKUP = {
         'bad': 3
     },
     'raim': {
-        'test': lambda x: isinstance(x, int) and not isinstance(x, bool) and x in (0, 1),  # TODO: bool is more Pythonic if the field is actually boolean and not state
-        'good': 0,
+        'test': lambda x: isinstance(x, bool),
+        'good': False,
         'bad': -2
     },
     'radio': {
@@ -192,8 +192,8 @@ MSG_VALIDATION_LOOKUP = {
         'bad': 2 * 2
     },
     'dte': {
-        'test': lambda x: isinstance(x, int) and not isinstance(x, bool) and x in (0, 1),  # TODO: Switch to a more Pythonic bool if this is actually boolean and not a status
-        'good': 0,
+        'test': lambda x: isinstance(x, bool),
+        'good': False,
         'bad': 8
     },
 
@@ -224,23 +224,23 @@ MSG_VALIDATION_LOOKUP = {
         'bad': 'j'
     },
     'dsc': {
-        'test': lambda x: isinstance(x, int) and not isinstance(x, bool) and x in (0, 1),  # TODO: Switch to a more Pythonic bool?
-        'good': 1,
+        'test': lambda x: isinstance(x, bool),
+        'good': True,
         'bad': -45
     },
     'band': {
-        'test': lambda x: isinstance(x, int) and not isinstance(x, bool) and x in (0, 1),  # TODO: Switch to a more Pythonic bool?
-        'good': 0,
+        'test': lambda x: isinstance(x, bool),
+        'good': False,
         'bad': 4
     },
     'msg22': {
-        'test': lambda x: isinstance(x, int) and not isinstance(x, bool) and x in (0, 1),  # TODO: Switch to a more Pythonic bool?
-        'good': 0,
+        'test': lambda x: isinstance(x, bool),
+        'good': False,
         'bad': -2
     },
     'assigned': {
-        'test': lambda x: isinstance(x, int) and not isinstance(x, bool) and x in (0, 1),  # TODO: Switch to a more Pythonic bool?
-        'good': 1,
+        'test': lambda x: isinstance(x, bool),
+        'good': True,
         'bad': -33
     },
 
