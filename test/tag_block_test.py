@@ -449,5 +449,42 @@ class DecodeTagSingleTest(TagTestCase):
       self.assertIsNone(decoded)
 
 
+class DecodeTagMultipleTest(TagTestCase):
+
+  def test_happy_path(self):
+    msg = {
+        'matches': [
+            {'payload': '!AIVDM,2,1,9,A,59NS9142>SW@7PQWR20u84pLF1=Dr2222222221SDHa?A0l;`CDhCU3lp888,0*5B'},
+            {'payload': '!AIVDM,2,2,9,A,88888888880,2*2D'}
+        ]
+    }
+    decoded = tag_block.DecodeTagMultiple(msg)
+    self.assertIsNotNone(decoded)
+    self.assertIn('md5', decoded)
+    self.assertEqual(decoded.get('id'), 5)
+
+  def test_qsize_not_one(self):
+    # Providing only the first part of a two-part message.
+    # The BareQueue will not yield a complete message, so qsize() == 0.
+    msg = {
+        'matches': [
+            {'payload': '!AIVDM,2,1,9,A,59NS9142>SW@7PQWR20u84pLF1=Dr2222222221SDHa?A0l;`CDhCU3lp888,0*5B'}
+        ]
+    }
+    decoded = tag_block.DecodeTagMultiple(msg)
+    self.assertIsNone(decoded)
+
+  def test_decode_error(self):
+    msg = {
+        'matches': [
+            {'payload': '!AIVDM,2,1,9,A,59NS9142>SW@7PQWR20u84pLF1=Dr2222222221SDHa?A0l;`CDhCU3lp888,0*5B'},
+            {'payload': '!AIVDM,2,2,9,A,88888888880,2*2D'}
+        ]
+    }
+    with mock.patch.object(ais, 'decode', side_effect=ais.DecodeError("decode error")):
+      decoded = tag_block.DecodeTagMultiple(msg)
+      self.assertIsNone(decoded)
+
+
 if __name__ == '__main__':
   unittest.main()
