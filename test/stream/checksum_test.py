@@ -13,10 +13,11 @@ class ChecksumValidTest(unittest.TestCase):
 
     def test_allow_tail_data(self):
         # When allowTailData=True (default), strings with data after the checksum are valid
-        self.assertTrue(checksum.isChecksumValid("!AIVDM,1,1,,B,35MsUdPOh8JwI:0HUwquiIFH21>i,0*09,b003669952,1370785759"))
+        data = "!AIVDM,1,1,,B,35MsUdPOh8JwI:0HUwquiIFH21>i,0*09,b003669952,1370785759"
+        self.assertTrue(checksum.isChecksumValid(data))
 
         # When allowTailData=False, such strings fail validation
-        self.assertFalse(checksum.isChecksumValid("!AIVDM,1,1,,B,35MsUdPOh8JwI:0HUwquiIFH21>i,0*09,b003669952,1370785759", allowTailData=False))
+        self.assertFalse(checksum.isChecksumValid(data, allowTailData=False))
 
     def test_no_match_allow_tail_data(self):
         # When allowTailData=True but there is no valid nmea checksum pattern
