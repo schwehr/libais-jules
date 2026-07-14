@@ -34,7 +34,10 @@ std::vector<std::string> split(const std::string &s, char delim) {
 
 
 int main(int argc,  char* argv[]) {
-  assert(2 <= argc);
+  if (argc < 2) {
+    std::cerr << "Usage: " << argv[0] << " <file>" << std::endl;
+    exit(1);
+  }
   std::ifstream infile(argv[1]);
   if (!infile.is_open()) {
     std::cerr << "Unable to open file: " << argv[1] << std::endl;
