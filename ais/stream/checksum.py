@@ -24,6 +24,7 @@ def checksumStr(data):
     """
 
     # FIX: strip off new line at the end too
+    data = data.rstrip('\r\n')
     if data[0]=='!' or data[0]=='?': data = data[1:]
     if data[-1]=='*': data = data[:-1]
     if data[-3]=='*': data = data[:-3]
