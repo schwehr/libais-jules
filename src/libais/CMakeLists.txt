@@ -1,4 +1,4 @@
-add_library(ais 
+add_library(ais
 ais.cpp
 ais_bitset.cpp
 ais1_2_3.cpp
@@ -48,4 +48,4 @@ install(TARGETS ais
 
 # Not yet handled:
 # ais_py.cpp
-# ais_decode_normed.cpp 
+# ais_decode_normed.cpp
