@@ -42,7 +42,7 @@ jobs:
 
       - name: Install
         run: CC=g++ uv pip install --system .\[tests\] --upgrade
-        
+
       - name: Script
         run: |
           mkdir build && cd build && cmake .. && make -j 4 && cd ..

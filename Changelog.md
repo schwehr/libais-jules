@@ -159,7 +159,7 @@ Changelog and release history for libais
 * Added AIS msg 9 - SAR Position
 * nais2py.py: Added try except wrapper on ProcessingThread.  Also try to track one off error found on call with timestamp converting to float
 * send_data.py: new file for testing
-* nais2py.py: LineQueue now has a custom drop handler for too many lines waiting.  Could be better.  
+* nais2py.py: LineQueue now has a custom drop handler for too many lines waiting.  Could be better.
 * nais2py.py: Added threaded network interface.  Seeing the network side overwhelm the processing thread
 * nais2py.py: Added response_class handling to VesselNames.  Can be preloaded.  Allows periodic name dump
 * nais2py.py: Added ENABLE_DB flag to try runs without database execute commands.  Faster debugging
@@ -171,7 +171,7 @@ Changelog and release history for libais
 
 * nais2py.py: Started providing a command line interface
 * nais2py.py: Added PositionCache class
-* nais2py.py: Added distance calculation code.  
+* nais2py.py: Added distance calculation code.
 * nais2py.py: Changed the database table names and structure.  Now vessel_name and vessel_pos
 * ais_lut.py: new file with lookup tables to make ais wire codes human readable.
 
