@@ -1,6 +1,6 @@
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v6.0.0
     hooks:
       - id: trailing-whitespace
   - repo: https://github.com/codespell-project/codespell
@@ -8,3 +8,7 @@ repos:
     hooks:
       - id: codespell
         args: ["--write-changes", "--ignore-words-list", "sart,fo,nam"]
+  - repo: https://github.com/woodruffw/zizmor-pre-commit
+    rev: v1.27.0
+    hooks:
+      - id: zizmor
