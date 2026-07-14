@@ -192,10 +192,14 @@ class BareQueue(Queue.Queue):
         logger.error('Incomplete message overwritten by new start.  '
                       'Dropped:\n  %s', self.groups[group_id])
       self.groups[group_id] = {
-          'line_nums': [line_num],
-          'lines': [line],
-          'matches': [match]
+          'line_nums': [None] * sentence_total,
+          'lines': [None] * sentence_total,
+          'matches': [None] * sentence_total,
+          'count': 1
       }
+      self.groups[group_id]['line_nums'][0] = line_num
+      self.groups[group_id]['lines'][0] = line
+      self.groups[group_id]['matches'][0] = match
       return
 
     if group_id not in self.groups:
@@ -204,21 +208,23 @@ class BareQueue(Queue.Queue):
       return
 
     entry = self.groups[group_id]
-    if len(entry['lines']) != sentence_num - 1:
+    if entry['count'] != sentence_num - 1:
       logger.error('Out of sequence message.  Dropping: %d != %d \n %s',
-                    len(entry['lines']), sentence_num - 1, line)
+                    entry['count'], sentence_num - 1, line)
       return
 
-    entry['lines'].append(line)
-    entry['matches'].append(match)
-    entry['line_nums'].append(line_num)
+    idx = sentence_num - 1
+    entry['lines'][idx] = line
+    entry['matches'][idx] = match
+    entry['line_nums'][idx] = line_num
+    entry['count'] += 1
 
     if sentence_num != sentence_total:
       # Nothing more to do in the middle of a sequence of sentences.
       return
 
-    body = ''.join([match['body'] for match in entry['matches']])
-    fill_bits = int(entry['matches'][-1]['fill_bits'])
+    body = ''.join([m['body'] for m in entry['matches'] if m is not None])
+    fill_bits = int(match['fill_bits'])
     try:
       decoded = ais.decode(body, fill_bits)
     except ais.DecodeError as error:
@@ -227,6 +233,8 @@ class BareQueue(Queue.Queue):
       return
     decoded['md5'] = hashlib.md5(body.encode('utf-8')).hexdigest()
     entry['decoded'] = decoded
+
+    del entry['count']
 
     # Found the final message in a group.
     Queue.Queue.put(self, entry)
