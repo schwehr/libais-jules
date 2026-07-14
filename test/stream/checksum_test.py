@@ -7,6 +7,10 @@ class ChecksumValidTest(unittest.TestCase):
         self.assertTrue(checksum.isChecksumValid("!AIVDM,1,1,,B,35MsUdPOh8JwI:0HUwquiIFH21>i,0*09"))
         self.assertTrue(checksum.isChecksumValid("AIVDM,1,1,,B,35MsUdPOh8JwI:0HUwquiIFH21>i,0*09"))
 
+    def test_newline_checksum(self):
+        self.assertTrue(checksum.isChecksumValid("!AIVDM,1,1,,B,35MsUdPOh8JwI:0HUwquiIFH21>i,0*09\n"))
+        self.assertTrue(checksum.isChecksumValid("!AIVDM,1,1,,B,35MsUdPOh8JwI:0HUwquiIFH21>i,0*09\r\n"))
+
     def test_invalid_checksum(self):
         self.assertFalse(checksum.isChecksumValid("!AIVDM,11,1,,B,35MsUdPOh8JwI:0HUwquiIFH21>i,0*09"))
         self.assertFalse(checksum.isChecksumValid("!AIVDM,1,1,,B,35MsUdPOh8JwI:0HUwquiIFH21>i,0*FF"))
