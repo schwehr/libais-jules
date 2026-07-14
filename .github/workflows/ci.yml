@@ -9,10 +9,6 @@ on:
   # Allows you to run this workflow manually from the Actions tab
   workflow_dispatch:
 
-env:
-  PIP_WHEEL_DIR: /home/runner/.cache/pip/wheels
-  PIP_FIND_LINKS: file:///home/runner/.cache/pip/wheels
-
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -33,6 +29,9 @@ jobs:
       - name: Checkout repo
         uses: actions/checkout@v2
 
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
@@ -41,12 +40,10 @@ jobs:
 
       - name: Before install
         run: |
-          mkdir --parents --verbose ${{ env.PIP_WHEEL_DIR }}
-          pip install setuptools --upgrade
-          pip install pytest --upgrade
+          uv pip install --system setuptools pytest --upgrade
 
       - name: Install
-        run: CC=g++ pip install .\[tests\] --upgrade
+        run: CC=g++ uv pip install --system .\[tests\] --upgrade
         
       - name: Script
         run: |
