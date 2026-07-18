@@ -34,6 +34,7 @@ import logging
 import math
 import re
 import typing
+from typing import Any
 
 from ais import util
 
@@ -49,7 +50,7 @@ NMEA_CHECKSUM_RE = re.compile(NMEA_CHECKSUM_RE_STR)
 
 
 # TODO(schwehr): Rename TimeUtc.
-def TimeUtc(fields: dict[str, typing.Any]) -> None:
+def TimeUtc(fields: dict[str, Any]) -> None:
   seconds, fractional_seconds = FloatSplit(float(fields['seconds']))
   microseconds = int(math.floor(fractional_seconds * 1e6))
 
@@ -83,7 +84,7 @@ ABK_RE = re.compile(ABK_RE_STR)
 
 # TODO(schwehr): Document that handlers return None if they fail to match
 #   the line to their message.
-def HandleAbk(line: str) -> typing.Optional[dict[str, typing.Any]]:
+def HandleAbk(line: str) -> dict[str, Any] | None:
   """Decode AIS Addressed and Binary Broadcast Acknowledgement (ABK)."""
   try:
     match = ABK_RE.match(line)
@@ -120,7 +121,7 @@ ADS_RE_STR = (
 ADS_RE = re.compile(ADS_RE_STR)
 
 
-def HandleAds(line: str) -> typing.Optional[dict[str, typing.Any]]:
+def HandleAds(line: str) -> dict[str, Any] | None:
   """Decode Automatic Device Status (ADS)."""
   try:
     match = ADS_RE.match(line)
@@ -158,7 +159,7 @@ ALR_RE_STR = (
 ALR_RE = re.compile(ALR_RE_STR)
 
 
-def HandleAlr(line: str) -> typing.Optional[dict[str, typing.Any]]:
+def HandleAlr(line: str) -> dict[str, Any] | None:
   """Decode Set Alarm State (ALR)."""
   try:
     match = ALR_RE.match(line)
@@ -211,7 +212,7 @@ BBM_RE_STR = (
 BBM_RE = re.compile(BBM_RE_STR)
 
 
-def HandleBbm(line: str) -> typing.Optional[dict[str, typing.Any]]:
+def HandleBbm(line: str) -> dict[str, Any] | None:
   """Decode Binary Broadcast Message (BBM) sentence."""
   try:
     match = BBM_RE.match(line)
@@ -253,7 +254,7 @@ FSR_RE_STR = (
 FSR_RE = re.compile(FSR_RE_STR)
 
 
-def HandleFsr(line: str) -> typing.Optional[dict[str, typing.Any]]:
+def HandleFsr(line: str) -> dict[str, Any] | None:
   try:
     match = FSR_RE.match(line)
     if not match:
@@ -309,7 +310,7 @@ GGA_RE_STR = (
 GGA_RE = re.compile(GGA_RE_STR)
 
 
-def HandleGga(line: str) -> typing.Optional[dict[str, typing.Any]]:
+def HandleGga(line: str) -> dict[str, Any] | None:
   try:
     match = GGA_RE.match(line)
     if not match:
@@ -365,7 +366,7 @@ TXT_RE_STR = (
 TXT_RE = re.compile(TXT_RE_STR)
 
 
-def HandleTxt(line: str) -> typing.Optional[dict[str, typing.Any]]:
+def HandleTxt(line: str) -> dict[str, Any] | None:
   """Decode Text Transmission (TXT).
 
   TODO(schwehr): Handle encoded characters.  e.g. ^21 is a '!'.
@@ -420,7 +421,7 @@ def FloatSplit(value: float) -> tuple[float, float]:
   return base, fractional
 
 
-def HandleZda(line: str) -> typing.Optional[dict[str, typing.Any]]:
+def HandleZda(line: str) -> dict[str, Any] | None:
   try:
     match = ZDA_RE.match(line)
     if not match:
@@ -467,7 +468,7 @@ HANDLERS = {
 }
 
 
-def DecodeLine(line: str) -> typing.Optional[dict[str, typing.Any]]:
+def DecodeLine(line: str) -> dict[str, Any] | None:
   """Decode a NMEA line.
 
   Args:
