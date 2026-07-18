@@ -15,7 +15,7 @@ def test_open_right_object(typeexamples_nmea_path):
         assert isinstance(src, ais.NmeaFile)
     # pytest places a different object in sys.stdin so do an old-shool
     # type comparison
-    with ais.open('-') as src:
+    with ais.open("-") as src:
         assert isinstance(src._fobj, type(sys.stdin))
 
 
@@ -24,8 +24,9 @@ def test_open_path(typeexamples_nmea_path):
     with ais.open(typeexamples_nmea_path) as src:
         for idx, line in enumerate(src):
             assert isinstance(line, dict)
-        assert idx >= 20, "20 messages was kind of chosen arbitrarily.  " \
-                          "Adjust if necessary."
+        assert idx >= 20, (
+            "20 messages was kind of chosen arbitrarily.  Adjust if necessary."
+        )
 
 
 def test_open_file_like_object(bare_nmea):
@@ -42,7 +43,7 @@ def test_open_exceptions():
 
     # Bad value for mode parameter
     with pytest.raises(ValueError):
-        ais.open('something', mode='bad-mode')
+        ais.open("something", mode="bad-mode")
 
     # Invalid file-like object
     with pytest.raises(TypeError):

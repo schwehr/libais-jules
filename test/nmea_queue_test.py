@@ -54,235 +54,253 @@ random text
 
 
 class NmeaQueueTest(unittest.TestCase):
+    def testTextData(self):
+        # These lines should all pass straight through.
+        src_lines = (
+            "",
+            "a",
+            "123",
+            # Not quite NMEA strings.
+            "$GPZDA",
+            "!AIVDM",
+            "*FF",
+        )
+        queue = nmea_queue.NmeaQueue()
+        for line in src_lines:
+            queue.put(line)
 
-  def testTextData(self):
-    # These lines should all pass straight through.
-    src_lines = (
-        '',
-        'a',
-        '123',
-        # Not quite NMEA strings.
-        '$GPZDA',
-        '!AIVDM',
-        '*FF',)
-    queue = nmea_queue.NmeaQueue()
-    for line in src_lines:
-      queue.put(line)
+        self.assertEqual(queue.qsize(), len(src_lines))
+        for i in range(1, queue.qsize() + 1):
+            msg = queue.get()
+            self.assertEqual(msg["line_nums"], [i])
+            self.assertEqual(msg["line_type"], nmea.TEXT)
+            self.assertEqual(msg["lines"], list(src_lines[i - 1 : i]))
 
-    self.assertEqual(queue.qsize(), len(src_lines))
-    for i in range(1, queue.qsize() + 1):
-      msg = queue.get()
-      self.assertEqual(msg['line_nums'], [i])
-      self.assertEqual(msg['line_type'], nmea.TEXT)
-      self.assertEqual(msg['lines'], list(src_lines[i-1:i]))
+        self.assertEqual(msg, {"line_nums": [6], "line_type": "TEXT", "lines": ["*FF"]})
 
-    self.assertEqual(msg,
-                     {'line_nums': [6], 'line_type': 'TEXT', 'lines': ['*FF']})
+    def testBareSingleLineData(self):
+        queue = nmea_queue.NmeaQueue()
+        lines = [line for line in BARE_NMEA.split("\n") if "," in line]
+        for line in lines:
+            queue.put(line)
+        self.assertEqual(queue.qsize(), 7)
+        msgs = []
+        while not queue.empty():
+            msgs.append(queue.get())
 
-  def testBareSingleLineData(self):
-    queue = nmea_queue.NmeaQueue()
-    lines = [line for line in BARE_NMEA.split('\n') if ',' in line]
-    for line in lines:
-      queue.put(line)
-    self.assertEqual(queue.qsize(), 7)
-    msgs = []
-    while not queue.empty():
-      msgs.append(queue.get())
+        self.assertEqual(
+            msgs[0],
+            {
+                "decoded": {
+                    "datetime": datetime.datetime(2009, 7, 12, 20, 30, 3),
+                    "message": "ZDA",
+                    "talker": "GP",
+                    "zone_hours": 0,
+                    "zone_minutes": 0,
+                },
+                "line_nums": [1],
+                "line_type": "BARE",
+                "lines": ["$GPZDA,203003.00,12,07,2009,00,00,*47"],
+            },
+        )
+        self.assertEqual(
+            msgs[1],
+            {
+                "decoded": {
+                    "cog": 52.099998474121094,
+                    "id": 2,
+                    "md5": "99c8c2804fde0481e6143051930b66c4",
+                    "mmsi": 218069000,
+                    "nav_status": 0,
+                    "position_accuracy": 0,
+                    "raim": False,
+                    "repeat_indicator": 0,
+                    "rot": 0.0,
+                    "rot_over_range": False,
+                    "slot_number": 683,
+                    "slot_timeout": 2,
+                    "sog": 11.100000381469727,
+                    "spare": 0,
+                    "special_manoeuvre": 0,
+                    "sync_state": 0,
+                    "timestamp": 16,
+                    "true_heading": 48,
+                    "x": -118.227775,
+                    "y": 31.24317,
+                },
+                "line_nums": [2],
+                "line_type": "BARE",
+                "lines": ["!AIVDM,1,1,,B,23?up2001gGRju>Ap:;R2APP08:c,0*0E"],
+                "matches": [
+                    {
+                        "body": "23?up2001gGRju>Ap:;R2APP08:c",
+                        "chan": "B",
+                        "checksum": "0E",
+                        "fill_bits": 0,
+                        "sen_num": 1,
+                        "sen_tot": 1,
+                        "seq_id": None,
+                        "talker": "AI",
+                        "vdm_type": "VDM",
+                        "vdm": "!AIVDM,1,1,,B,23?up2001gGRju>Ap:;R2APP08:c,0*0E",
+                    }
+                ],
+            },
+        )
 
-    self.assertEqual(msgs[0],
-                     {'decoded': {
-                          'datetime': datetime.datetime(
-                              2009, 7, 12, 20, 30, 3),
-                          'message': 'ZDA',
-                          'talker': 'GP',
-                          'zone_hours': 0,
-                          'zone_minutes': 0},
-                      'line_nums': [1],
-                      'line_type': 'BARE',
-                      'lines': ['$GPZDA,203003.00,12,07,2009,00,00,*47']})
-    self.assertEqual(
-        msgs[1],
-        {'decoded': {
-            'cog': 52.099998474121094,
-            'id': 2,
-            'md5': '99c8c2804fde0481e6143051930b66c4',
-            'mmsi': 218069000,
-            'nav_status': 0,
-            'position_accuracy': 0,
-            'raim': False,
-            'repeat_indicator': 0,
-            'rot': 0.0,
-            'rot_over_range': False,
-            'slot_number': 683,
-            'slot_timeout': 2,
-            'sog': 11.100000381469727,
-            'spare': 0,
-            'special_manoeuvre': 0,
-            'sync_state': 0,
-            'timestamp': 16,
-            'true_heading': 48,
-            'x': -118.227775,
-            'y': 31.24317},
-         'line_nums': [2],
-         'line_type': 'BARE',
-         'lines': ['!AIVDM,1,1,,B,23?up2001gGRju>Ap:;R2APP08:c,0*0E'],
-         'matches': [{
-             'body': '23?up2001gGRju>Ap:;R2APP08:c',
-             'chan': 'B',
-             'checksum': '0E',
-             'fill_bits': 0,
-             'sen_num': 1,
-             'sen_tot': 1,
-             'seq_id': None,
-             'talker': 'AI',
-             'vdm_type': 'VDM',
-             'vdm': '!AIVDM,1,1,,B,23?up2001gGRju>Ap:;R2APP08:c,0*0E'}]}
-    )
+    def testTagBlockLines(self):
+        queue = nmea_queue.NmeaQueue()
+        lines = [line for line in TAG_BLOCK.split("\n") if "," in line]
+        for line in lines:
+            queue.put(line)
+        self.assertEqual(queue.qsize(), 6)
+        msgs = []
+        while not queue.empty():
+            msgs.append(queue.get())
 
-  def testTagBlockLines(self):
-    queue = nmea_queue.NmeaQueue()
-    lines = [line for line in TAG_BLOCK.split('\n') if ',' in line]
-    for line in lines:
-      queue.put(line)
-    self.assertEqual(queue.qsize(), 6)
-    msgs = []
-    while not queue.empty():
-      msgs.append(queue.get())
+        for msg_num in range(5):
+            self.assertIn("decoded", msgs[msg_num])
+        ids = [msg["decoded"]["id"] for msg in msgs[1:] if "decoded" in msg]
+        self.assertEqual(ids, [11, 5, 5, 3, 27])
 
-    for msg_num in range(5):
-      self.assertIn('decoded', msgs[msg_num])
-    ids = [msg['decoded']['id'] for msg in msgs[1:] if 'decoded' in msg]
-    self.assertEqual(ids, [11, 5, 5, 3, 27])
+        self.assertEqual(
+            msgs[-1],
+            {
+                "decoded": {
+                    "cog": 131,
+                    "gnss": True,
+                    "id": 27,
+                    "md5": "50898a3435865cf76f1b502b2821672b",
+                    "mmsi": 577305000,
+                    "nav_status": 5,
+                    "position_accuracy": 1,
+                    "raim": False,
+                    "repeat_indicator": 0,
+                    "sog": 0,
+                    "spare": 0,
+                    "x": -90.20666666666666,
+                    "y": 29.145,
+                },
+                "line_nums": [9],
+                "line_type": "TAGB",
+                "lines": [
+                    "\\n:80677,s:b003669952,c:1428884269*2A"
+                    "\\!SAVDM,1,1,,B,K8VSqb9LdU28WP8<,0*17"
+                ],
+                "matches": [
+                    {
+                        "dest": None,
+                        "group": None,
+                        "group_id": None,
+                        "line_num": 80677,
+                        "metadata": "n:80677,s:b003669952,c:1428884269*2A",
+                        "payload": "!SAVDM,1,1,,B,K8VSqb9LdU28WP8<,0*17",
+                        "quality": None,
+                        "rcvr": "b003669952",
+                        "rel_time": None,
+                        "sentence_num": None,
+                        "sentence_tot": None,
+                        "tag_checksum": "2A",
+                        "text": None,
+                        "text_date": None,
+                        "time": 1428884269,
+                    }
+                ],
+                "times": [1428884269],
+            },
+        )
 
-    self.assertEqual(
-        msgs[-1],
-        {'decoded': {
-            'cog': 131,
-            'gnss': True,
-            'id': 27,
-            'md5': '50898a3435865cf76f1b502b2821672b',
-            'mmsi': 577305000,
-            'nav_status': 5,
-            'position_accuracy': 1,
-            'raim': False,
-            'repeat_indicator': 0,
-            'sog': 0,
-            'spare': 0,
-            'x': -90.20666666666666,
-            'y': 29.145},
-         'line_nums': [9],
-         'line_type': 'TAGB',
-         'lines': [
-             '\\n:80677,s:b003669952,c:1428884269*2A'
-             '\\!SAVDM,1,1,,B,K8VSqb9LdU28WP8<,0*17'],
-         'matches': [{
-             'dest': None,
-             'group': None,
-             'group_id': None,
-             'line_num': 80677,
-             'metadata': 'n:80677,s:b003669952,c:1428884269*2A',
-             'payload': '!SAVDM,1,1,,B,K8VSqb9LdU28WP8<,0*17',
-             'quality': None,
-             'rcvr': 'b003669952',
-             'rel_time': None,
-             'sentence_num': None,
-             'sentence_tot': None,
-             'tag_checksum': '2A',
-             'text': None,
-             'text_date': None,
-             'time': 1428884269}],
-         'times': [1428884269]})
+    def testUscgLines(self):
+        queue = nmea_queue.NmeaQueue()
+        lines = [line for line in USCG.split("\n") if "," in line]
+        for line in lines:
+            queue.put(line)
 
-  def testUscgLines(self):
-    queue = nmea_queue.NmeaQueue()
-    lines = [line for line in USCG.split('\n') if ',' in line]
-    for line in lines:
-      queue.put(line)
+        self.assertEqual(queue.qsize(), 4)
+        msgs = []
+        while not queue.empty():
+            msgs.append(queue.get())
 
-    self.assertEqual(queue.qsize(), 4)
-    msgs = []
-    while not queue.empty():
-      msgs.append(queue.get())
+        for msg in msgs:
+            self.assertIn("decoded", msg)
+        ids = [msg["decoded"]["id"] for msg in msgs]
+        self.assertEqual(ids, [1, 5, 3, 27])
 
-    for msg in msgs:
-      self.assertIn('decoded', msg)
-    ids = [msg['decoded']['id'] for msg in msgs]
-    self.assertEqual(ids, [1, 5, 3, 27])
+        self.assertEqual(
+            msgs[3],
+            {
+                "decoded": {
+                    "cog": 131,
+                    "gnss": True,
+                    "id": 27,
+                    "md5": "50898a3435865cf76f1b502b2821672b",
+                    "mmsi": 577305000,
+                    "nav_status": 5,
+                    "position_accuracy": 1,
+                    "raim": False,
+                    "repeat_indicator": 0,
+                    "sog": 0,
+                    "spare": 0,
+                    "x": -90.20666666666666,
+                    "y": 29.145,
+                },
+                "line_nums": [5],
+                "line_type": "USCG",
+                "lines": ["!SAVDM,1,1,,B,K8VSqb9LdU28WP8<,0*17,rMySat,1429287258"],
+                "matches": [
+                    {
+                        "body": "K8VSqb9LdU28WP8<",
+                        "chan": "B",
+                        "checksum": "17",
+                        "counter": None,
+                        "fill_bits": 0,
+                        "hour": None,
+                        "minute": None,
+                        "payload": "!SAVDM,1,1,,B,K8VSqb9LdU28WP8<,0*17",
+                        "receiver_time": None,
+                        "rssi": None,
+                        "second": None,
+                        "sen_num": 1,
+                        "sen_tot": 1,
+                        "seq_id": None,
+                        "signal_strength": None,
+                        "slot": None,
+                        "station": "rMySat",
+                        "station_type": "r",
+                        "talker": "SA",
+                        "time": 1429287258,
+                        "time_of_arrival": None,
+                        "uscg_metadata": ",rMySat,1429287258",
+                        "vdm": "!SAVDM,1,1,,B,K8VSqb9LdU28WP8<,0*17",
+                        "vdm_type": "VDM",
+                    }
+                ],
+            },
+        )
 
-    self.assertEqual(
-        msgs[3],
-        {
-            'decoded': {
-                'cog': 131,
-                'gnss': True,
-                'id': 27,
-                'md5': '50898a3435865cf76f1b502b2821672b',
-                'mmsi': 577305000,
-                'nav_status': 5,
-                'position_accuracy': 1,
-                'raim': False,
-                'repeat_indicator': 0,
-                'sog': 0,
-                'spare': 0,
-                'x': -90.20666666666666,
-                'y': 29.145},
-            'line_nums': [5],
-            'line_type': 'USCG',
-            'lines': ['!SAVDM,1,1,,B,K8VSqb9LdU28WP8<,0*17,rMySat,1429287258'],
-            'matches': [{
-                'body': 'K8VSqb9LdU28WP8<',
-                'chan': 'B',
-                'checksum': '17',
-                'counter': None,
-                'fill_bits': 0,
-                'hour': None,
-                'minute': None,
-                'payload': '!SAVDM,1,1,,B,K8VSqb9LdU28WP8<,0*17',
-                'receiver_time': None,
-                'rssi': None,
-                'second': None,
-                'sen_num': 1,
-                'sen_tot': 1,
-                'seq_id': None,
-                'signal_strength': None,
-                'slot': None,
-                'station': 'rMySat',
-                'station_type': 'r',
-                'talker': 'SA',
-                'time': 1429287258,
-                'time_of_arrival': None,
-                'uscg_metadata': ',rMySat,1429287258',
-                'vdm': '!SAVDM,1,1,,B,K8VSqb9LdU28WP8<,0*17',
-                'vdm_type': 'VDM'}]})
+    def testMixedLines(self):
+        queue = nmea_queue.NmeaQueue()
+        lines = [line for line in MIXED.split("\n") if line.strip()]
+        for line in lines:
+            queue.put(line)
 
-  def testMixedLines(self):
-    queue = nmea_queue.NmeaQueue()
-    lines = [line for line in MIXED.split('\n') if line.strip()]
-    for line in lines:
-      queue.put(line)
+        self.assertEqual(queue.qsize(), 4)
+        msgs = []
+        while not queue.empty():
+            msgs.append(queue.get())
 
-    self.assertEqual(queue.qsize(), 4)
-    msgs = []
-    while not queue.empty():
-      msgs.append(queue.get())
+        for msg in msgs[:-1]:
+            self.assertIn("decoded", msg)
+        ids = [msg["decoded"]["id"] for msg in msgs[:-1]]
+        self.assertEqual(ids, [1, 4, 27])
 
-    for msg in msgs[:-1]:
-      self.assertIn('decoded', msg)
-    ids = [msg['decoded']['id'] for msg in msgs[:-1]]
-    self.assertEqual(ids, [1, 4, 27])
-
-    line_types = [msg['line_type'] for msg in msgs]
-    self.assertEqual(
-        line_types,
-        [nmea.USCG, nmea.BARE, nmea.TAGB, nmea.TEXT])
+        line_types = [msg["line_type"] for msg in msgs]
+        self.assertEqual(line_types, [nmea.USCG, nmea.BARE, nmea.TAGB, nmea.TEXT])
 
 
-@pytest.mark.parametrize("nmea", [
-    BARE_NMEA.strip(),
-    TAG_BLOCK.strip(),
-    USCG.strip(),
-    MIXED.strip()
-])
+@pytest.mark.parametrize(
+    "nmea", [BARE_NMEA.strip(), TAG_BLOCK.strip(), USCG.strip(), MIXED.strip()]
+)
 def test_NmeaFile_against_queue(nmea):
 
     queue = nmea_queue.NmeaQueue()
@@ -302,5 +320,5 @@ def test_NmeaFile_against_queue(nmea):
         assert e == a
 
 
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

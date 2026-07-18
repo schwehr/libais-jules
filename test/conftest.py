@@ -5,12 +5,12 @@ import os
 import pytest
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def typeexamples_nmea_path():
-    return os.path.join('test', 'data', 'typeexamples.nmea')
+    return os.path.join("test", "data", "typeexamples.nmea")
 
 
-@pytest.fixture(scope='function')
+@pytest.fixture(scope="function")
 def bare_nmea():
     return """
 $GPZDA,203003.00,12,07,2009,00,00,*47
