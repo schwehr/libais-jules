@@ -10,17 +10,19 @@ to handle those.
 """
 
 import re
-import urllib2
+import urllib.request
+from typing import List, Optional
 from bs4 import BeautifulSoup
+from bs4.element import Tag
 
-mid_url = 'http://www.itu.int/online/mms/glad/cga_mids.sh?lng=E'
+mid_url: str = 'http://www.itu.int/online/mms/glad/cga_mids.sh?lng=E'
 
-data = urllib2.urlopen(mid_url).read()
+data: bytes = urllib.request.urlopen(mid_url).read()
 # print data[:100]
 
 
 
-soup = BeautifulSoup(data)
+soup: BeautifulSoup = BeautifulSoup(data, "html.parser")
 
 with open('dacs.h', 'w') as dac_out, open('mid2.csv', 'w') as mid_out:
 
@@ -28,20 +30,30 @@ with open('dacs.h', 'w') as dac_out, open('mid2.csv', 'w') as mid_out:
 # prefix is used as DAC for binary messages or as the 1st three of the MMSI
 # http://www.itu.int/online/mms/glad/cga_mids.sh?lng=E\n""")
 
+  tr: Tag
   for tr in soup.find_all('tr'):
-    td = tr.find('td')
+    td: Optional[Tag] = tr.find('td')
     try:
-      text = td.get_text()
+      if td is not None:
+        text: str = td.get_text()
+      else:
+        continue
     except AttributeError:
       continue
     if re.match(r'^\d{3}', text):
       # print 'td', td
       # print text
-      mid_vals = [int(val) for val in text.split(',')]
+      mid_vals: List[int] = [int(val) for val in text.split(',')]
      #  print mid_vals
     else:
       continue
-    country = td.findNextSibling().get_text().strip()
+
+    next_sibling: Optional[Tag] = td.findNextSibling()
+    if next_sibling is None:
+        continue
+
+    country: str = next_sibling.get_text().strip()
+    mid: int
     for mid in mid_vals:
       try:
         mid_out.write(f'{mid},"{country}"\n')
@@ -51,7 +63,7 @@ with open('dacs.h', 'w') as dac_out, open('mid2.csv', 'w') as mid_out:
 
     for mid in mid_vals:
       try:
-        header_country = country.replace(' ', '_').split('(')[0].upper()
+        header_country: str = country.replace(' ', '_').split('(')[0].upper()
         header_country = header_country.rstrip('_')
         header_country = header_country.split('_-_')[0]
         dac_out.write('  AIS_DAC_%d_%s = %d,\n' % (mid,
