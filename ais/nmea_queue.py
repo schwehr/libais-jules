@@ -1,5 +1,6 @@
 """Manage a stream of NMEA messages with optional metadata."""
 import queue as Queue
+from typing import Any
 
 from ais import nmea
 from ais import tag_block
@@ -11,14 +12,14 @@ class Error(Exception):
   pass
 
 
-def GetOrNone(queue):
+def GetOrNone(queue: Queue.Queue[dict[str, Any]]) -> dict[str, Any] | None:
   try:
     return queue.get(block=False)
   except Queue.Empty:
-    return
+    return None
 
 
-class NmeaQueue(Queue.Queue):
+class NmeaQueue(Queue.Queue[dict[str, Any]]):
   # pylint: disable=line-too-long
   r"""Process mixed text, bare NMEA or NMEA with TAG BLOCK or USCG metadata.
 
@@ -108,7 +109,7 @@ class NmeaQueue(Queue.Queue):
     self.line_num = 0
     Queue.Queue.__init__(self)
 
-  def put(self, line, line_num=None):
+  def put(self, line: str, line_num: int | None = None) -> None: # type: ignore[override]
     """Add a line to the queue.
 
     Args:
@@ -144,8 +145,8 @@ class NmeaQueue(Queue.Queue):
       msg['line_type'] = line_type
       Queue.Queue.put(self, msg)
 
-  def GetOrNone(self):
+  def GetOrNone(self) -> dict[str, Any] | None:
     try:
       return self.get(block=False)
     except Queue.Empty:
-      return
+      return None
