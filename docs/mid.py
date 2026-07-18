@@ -11,7 +11,6 @@ to handle those.
 
 import re
 import urllib.request
-from typing import List, Optional
 from bs4 import BeautifulSoup
 from bs4.element import Tag
 
@@ -32,7 +31,7 @@ with open('dacs.h', 'w') as dac_out, open('mid2.csv', 'w') as mid_out:
 
   tr: Tag
   for tr in soup.find_all('tr'):
-    td: Optional[Tag] = tr.find('td')
+    td: Tag | None = tr.find('td')
     try:
       if td is not None:
         text: str = td.get_text()
@@ -43,12 +42,12 @@ with open('dacs.h', 'w') as dac_out, open('mid2.csv', 'w') as mid_out:
     if re.match(r'^\d{3}', text):
       # print 'td', td
       # print text
-      mid_vals: List[int] = [int(val) for val in text.split(',')]
+      mid_vals: list[int] = [int(val) for val in text.split(',')]
      #  print mid_vals
     else:
       continue
 
-    next_sibling: Optional[Tag] = td.findNextSibling()
+    next_sibling: Tag | None = td.findNextSibling()
     if next_sibling is None:
         continue
 
