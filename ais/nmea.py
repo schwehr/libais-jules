@@ -33,7 +33,7 @@ ID_TAGB_RE = re.compile(r'\\([a-zA-Z]:[^*,\\]*[,]?)+\*[0-9A-Fa-f]{2}(\\.*)?$')
 ID_BARE_VDM_RE = re.compile(r'[!$][A-Z]{2}VD[MO][^*!$]*\*[0-9A-Fa-f]{2}')
 
 
-def _Checksum(sentence):
+def _Checksum(sentence: str) -> str:
   """Compute the NMEA checksum for a payload."""
   checksum = 0
   for char in sentence:
@@ -42,7 +42,7 @@ def _Checksum(sentence):
   return checksum_str.upper()
 
 
-def Checksum(sentence):
+def Checksum(sentence: str) -> str:
   """Compute the checksum for a NMEA sentence or TAG BLOCK prefix.
 
   Args:
@@ -58,7 +58,7 @@ def Checksum(sentence):
   return _Checksum(sentence)
 
 
-def LineType(line):
+def LineType(line: str) -> str:
   """Give the type of NMEA line this is.
 
   Args:
