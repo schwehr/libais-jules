@@ -96,7 +96,7 @@ class TagQueue(Queue.Queue):
   lines.  It will pass single line messages straight through.
   """
 
-  def __init__(self) -> None:
+  def __init__(self):
     self.groups: dict[int, dict[str, Any]] = {}
     self.line_num: int = 0
     Queue.Queue.__init__(self)
