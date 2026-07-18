@@ -15,7 +15,7 @@ logger = logging.getLogger('libais')
 
 class TrackRange:
 
-  def __init__(self) -> None:
+  def __init__(self):
     self.min: float | None = None
     self.max: float | None = None
 
@@ -33,7 +33,7 @@ class TrackRange:
 
 class Stats:
 
-  def __init__(self) -> None:
+  def __init__(self):
     self.counts: TypingCounter[str] = collections.Counter()
     self.queue = nmea_queue.NmeaQueue()
     self.time_range = TrackRange()
