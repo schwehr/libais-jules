@@ -102,7 +102,7 @@ class NmeaQueue(Queue.Queue[dict[str, Any]]):
          'times': [1428884269]})
   """
 
-  def __init__(self) -> None:
+  def __init__(self):
     self.bare_queue = vdm.BareQueue()
     self.tagb_queue = tag_block.TagQueue()
     self.uscg_queue = uscg.UscgQueue()
