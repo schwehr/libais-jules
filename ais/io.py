@@ -69,12 +69,12 @@
 
 import codecs
 import sys
-from typing import Any, Dict, IO, Iterator, Optional, Union
+from typing import Any, IO, Iterator
 
 import ais.nmea_queue
 
 
-def open(name: Union[str, IO[Any]], mode: str = 'r', **kwargs: Any) -> 'NmeaFile':
+def open(name: str | IO[Any], mode: str = 'r', **kwargs: Any) -> 'NmeaFile':
   """Open a file containing NMEA and instantiate an instance of `NmeaFile()`.
   Like Python's `open()`, set the `mode` parameter to 'r' for normal reading or
   or 'rU' for opening the file in universal newline mode.
@@ -111,7 +111,7 @@ def open(name: Union[str, IO[Any]], mode: str = 'r', **kwargs: Any) -> 'NmeaFile
   return NmeaFile(fobj)
 
 
-class NmeaFile(Iterator[Dict[str, Any]]):
+class NmeaFile(Iterator[dict[str, Any]]):
   """Provides a file-like object interface to the `ais.nmea_queue` module."""
 
   def __init__(self, fobj: IO[Any]) -> None:
@@ -122,7 +122,7 @@ class NmeaFile(Iterator[Dict[str, Any]]):
     """
 
     self._fobj = fobj
-    self._queue: Optional[Any] = ais.nmea_queue.NmeaQueue()
+    self._queue: Any | None = ais.nmea_queue.NmeaQueue()
 
   @property
   def closed(self) -> bool:
@@ -150,7 +150,7 @@ class NmeaFile(Iterator[Dict[str, Any]]):
     self._queue = None
     return self.close()
 
-  def __next__(self) -> Dict[str, Any]:
+  def __next__(self) -> dict[str, Any]:
     """Return the next decoded AIS message."""
     if self._queue is None:
       raise StopIteration
