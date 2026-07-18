@@ -3,7 +3,7 @@
 import sys
 import traceback
 import warnings
-from typing import Any, Callable, Dict, Iterable, Iterator, Optional, Tuple, List, TextIO
+from typing import Any, Callable, Iterable, Iterator
 
 import ais
 from ais.stream import checksum
@@ -16,9 +16,9 @@ warnings.warn(
 
 
 def ErrorPrinter(e: Exception,
-                 stats: Dict[str, Any],
+                 stats: dict[str, Any],
                  verbose: bool = False,
-                 max_errors: Optional[float] = None, # In % of total number of input lines
+                 max_errors: float | None = None, # In % of total number of input lines
                  **kw: Any) -> None:
   if max_errors != None and float(stats["error_num_total"]) / float(stats["line_num"]) * 100.0 > max_errors:
     raise TooManyErrorsError(**stats)
@@ -93,7 +93,7 @@ class TooManyErrorsError(StreamError):
     return '%(description)s: %(error_num_total)s errors in %(line_num)s lines:%(error_lines)s' % res
 
 
-def parseTagBlock(line: str) -> Tuple[Dict[str, Any], str]:
+def parseTagBlock(line: str) -> tuple[dict[str, Any], str]:
   if not line.startswith("\\"):
     return {}, line
   tagblock, line = line[1:].split("\\", 1)
@@ -130,7 +130,7 @@ def parseTagBlock(line: str) -> Tuple[Dict[str, Any], str]:
   return tags, line
 
 
-def add_error_to_stats(e: Exception, stats: Dict[str, Any]) -> None:
+def add_error_to_stats(e: Exception, stats: dict[str, Any]) -> None:
   if "error_num_total" not in stats:
     stats["error_num_total"] = 0
   stats["error_num_total"] += 1
@@ -152,8 +152,8 @@ def normalize(nmea: Iterable[str] = sys.stdin,
               pass_invalid_checksums: bool = False,
               allow_missing_timestamps: bool = False,
               errorcb: Callable[..., None] = ErrorPrinter,
-              stats: Optional[Dict[str, Any]] = None,
-              **kw: Any) -> Iterator[Tuple[Dict[str, Any], str, str]]:
+              stats: dict[str, Any] | None = None,
+              **kw: Any) -> Iterator[tuple[dict[str, Any], str, str]]:
   """Assemble multi-line messages
 
   Args:
@@ -320,8 +320,8 @@ def normalize(nmea: Iterable[str] = sys.stdin,
 def decode(nmea: Iterable[str] = sys.stdin,
            errorcb: Callable[..., None] = ErrorPrinter,
            keep_nmea: bool = False,
-           stats: Optional[Dict[str, Any]] = None,
-           **kw: Any) -> Iterator[Dict[str, Any]]:
+           stats: dict[str, Any] | None = None,
+           **kw: Any) -> Iterator[dict[str, Any]]:
   """Decodes a stream of AIS messages. Takes the same arguments as normalize."""
 
   if stats is None: stats={}
