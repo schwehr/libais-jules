@@ -74,91 +74,96 @@ from typing import Any, IO, Iterator
 import ais.nmea_queue
 
 
-def open(name: str | IO[Any], mode: str = 'r', **kwargs: Any) -> 'NmeaFile':
-  """Open a file containing NMEA and instantiate an instance of `NmeaFile()`.
-  Like Python's `open()`, set the `mode` parameter to 'r' for normal reading or
-  or 'rU' for opening the file in universal newline mode.
+def open(name: str | IO[Any], mode: str = "r", **kwargs: Any) -> "NmeaFile":
+    """Open a file containing NMEA and instantiate an instance of `NmeaFile()`.
+    Like Python's `open()`, set the `mode` parameter to 'r' for normal reading or
+    or 'rU' for opening the file in universal newline mode.
 
-  Args:
-    name: A file path, file-like object, or '-' for stdin.
-    mode: I/O mode for opening the input file.  r, rU, or U
+    Args:
+      name: A file path, file-like object, or '-' for stdin.
+      mode: I/O mode for opening the input file.  r, rU, or U
 
-  Raises:
-    TypeError: Invalid object for name parameter.
-    ValueError: Invalid value for mode parameter.
+    Raises:
+      TypeError: Invalid object for name parameter.
+      ValueError: Invalid value for mode parameter.
 
-  Returns:
-    An instance of NmeaFile that is ready for reading.
-  """
+    Returns:
+      An instance of NmeaFile that is ready for reading.
+    """
 
-  io_modes = ('r', 'rU', 'U')
+    io_modes = ("r", "rU", "U")
 
-  if mode not in io_modes:
-    raise ValueError("Mode '{m}' is unsupported.  Must be one of: {ms}".format(
-      m=mode, ms=', '.join(io_modes)))
+    if mode not in io_modes:
+        raise ValueError(
+            "Mode '{m}' is unsupported.  Must be one of: {ms}".format(
+                m=mode, ms=", ".join(io_modes)
+            )
+        )
 
-  if name == '-':
-    fobj = sys.stdin
-  elif isinstance(name, str):
-    fobj = codecs.open(name, **kwargs)
-  elif hasattr(name, 'close') and \
-          (hasattr(name, 'next') or hasattr(name, '__next__')):
-    fobj = name
-  else:
-    raise TypeError("'name' must be a file path, file-like object, "
-                    "or '-' for stdin.")
+    if name == "-":
+        fobj = sys.stdin
+    elif isinstance(name, str):
+        fobj = codecs.open(name, **kwargs)
+    elif hasattr(name, "close") and (
+        hasattr(name, "next") or hasattr(name, "__next__")
+    ):
+        fobj = name
+    else:
+        raise TypeError(
+            "'name' must be a file path, file-like object, or '-' for stdin."
+        )
 
-  return NmeaFile(fobj)
+    return NmeaFile(fobj)
 
 
 class NmeaFile(Iterator[dict[str, Any]]):
-  """Provides a file-like object interface to the `ais.nmea_queue` module."""
+    """Provides a file-like object interface to the `ais.nmea_queue` module."""
 
-  def __init__(self, fobj: IO[Any]):
-    """Construct a parsing stream.
+    def __init__(self, fobj: IO[Any]):
+        """Construct a parsing stream.
 
-    Args:
-      fobj: File-like object.
-    """
+        Args:
+          fobj: File-like object.
+        """
 
-    self._fobj = fobj
-    self._queue: Any | None = ais.nmea_queue.NmeaQueue()
+        self._fobj = fobj
+        self._queue: Any | None = ais.nmea_queue.NmeaQueue()
 
-  @property
-  def closed(self) -> bool:
-    """Is the file-like object from which we are reading open for reading?"""
-    return self._fobj.closed
+    @property
+    def closed(self) -> bool:
+        """Is the file-like object from which we are reading open for reading?"""
+        return self._fobj.closed
 
-  @property
-  def name(self) -> str:
-    """Name of the file-like object from which we are reading."""
-    return self._fobj.name
+    @property
+    def name(self) -> str:
+        """Name of the file-like object from which we are reading."""
+        return self._fobj.name
 
-  def close(self) -> None:
-    """Close the file-like object from which we are reading and dump what is
-    left in the queue."""
-    return self._fobj.close()
+    def close(self) -> None:
+        """Close the file-like object from which we are reading and dump what is
+        left in the queue."""
+        return self._fobj.close()
 
-  def __iter__(self) -> 'NmeaFile':
-    return self
+    def __iter__(self) -> "NmeaFile":
+        return self
 
-  def __enter__(self) -> 'NmeaFile':
-    return self
+    def __enter__(self) -> "NmeaFile":
+        return self
 
-  def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
-    # Destroy the queue, which could be a large in-memory object.
-    self._queue = None
-    return self.close()
+    def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
+        # Destroy the queue, which could be a large in-memory object.
+        self._queue = None
+        return self.close()
 
-  def __next__(self) -> dict[str, Any]:
-    """Return the next decoded AIS message."""
-    if self._queue is None:
-      raise StopIteration
+    def __next__(self) -> dict[str, Any]:
+        """Return the next decoded AIS message."""
+        if self._queue is None:
+            raise StopIteration
 
-    msg = None
-    while not msg:
-        self._queue.put(next(self._fobj))
-        msg = self._queue.GetOrNone()
-    return msg
+        msg = None
+        while not msg:
+            self._queue.put(next(self._fobj))
+            msg = self._queue.GetOrNone()
+        return msg
 
-  next = __next__
+    next = __next__

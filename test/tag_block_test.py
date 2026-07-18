@@ -50,441 +50,526 @@ SINGLE_LINE_MESSAGES = r"""
 
 
 class TagTestCase(unittest.TestCase):
-
-  def assertDictContainsSubset2(self, actual, expected):
-    # assertDictContainsSubset was deprecated because of incorrect arg order.
-    # This method has the correct order.
-    self.assertIsInstance(expected, dict)
-    self.assertIsInstance(actual, dict)
-    for key, value in expected.items():
-      self.assertEqual(actual[key], value)
+    def assertDictContainsSubset2(self, actual, expected):
+        # assertDictContainsSubset was deprecated because of incorrect arg order.
+        # This method has the correct order.
+        self.assertIsInstance(expected, dict)
+        self.assertIsInstance(actual, dict)
+        for key, value in expected.items():
+            self.assertEqual(actual[key], value)
 
 
 class TagBlockTest(TagTestCase):
+    def testFractionalTime(self):
+        # TAG BLOCK only allows for integer times, but allow for greater precision.
+        line = "\\c:1425327399.*70\\"
+        match = tag_block.TAG_BLOCK_RE.match(line).groupdict()
+        match["time"] = float(match["time"])
+        match["time"] = int(match["time"])
+        expected = {"time": 1425327399.0}
+        self.assertDictContainsSubset2(match, expected)
+        self.assertDictContainsSubset2(tag_block.Parse(match), expected)
+        self.assertDictContainsSubset2(tag_block.Parse(line), expected)
 
-  def testFractionalTime(self):
-    # TAG BLOCK only allows for integer times, but allow for greater precision.
-    line = '\\c:1425327399.*70\\'
-    match = tag_block.TAG_BLOCK_RE.match(line).groupdict()
-    match['time'] = float(match['time'])
-    match['time'] = int(match['time'])
-    expected = {'time': 1425327399.0}
-    self.assertDictContainsSubset2(match, expected)
-    self.assertDictContainsSubset2(tag_block.Parse(match), expected)
-    self.assertDictContainsSubset2(tag_block.Parse(line), expected)
+        line = "\\c:1425327399.0*40\\"
+        match = tag_block.TAG_BLOCK_RE.match(line).groupdict()
+        match["time"] = float(match["time"])
+        expected = {"time": 1425327399.0}
+        self.assertDictContainsSubset2(match, expected)
+        self.assertDictContainsSubset2(tag_block.Parse(match), expected)
+        self.assertDictContainsSubset2(tag_block.Parse(line), expected)
 
-    line = '\\c:1425327399.0*40\\'
-    match = tag_block.TAG_BLOCK_RE.match(line).groupdict()
-    match['time'] = float(match['time'])
-    expected = {'time': 1425327399.0}
-    self.assertDictContainsSubset2(match, expected)
-    self.assertDictContainsSubset2(tag_block.Parse(match), expected)
-    self.assertDictContainsSubset2(tag_block.Parse(line), expected)
+    def testShortSingleLine(self):
+        line = (
+            r"\n:121650,s:r17MHOP1,c:1425327399*1D\$"
+            "ANZDA,201638.00,02,03,2015,00,00*77"
+        )
+        match = tag_block.TAG_BLOCK_RE.match(line).groupdict()
+        match["line_num"] = int(match["line_num"])
+        match["time"] = int(match["time"])
+        expected = {
+            "line_num": 121650,
+            "metadata": "n:121650,s:r17MHOP1,c:1425327399*1D",
+            "payload": "$ANZDA,201638.00,02,03,2015,00,00*77",
+            "rcvr": "r17MHOP1",
+            "tag_checksum": "1D",
+            "time": 1425327399,
+        }
+        self.assertDictContainsSubset2(match, expected)
+        self.assertDictContainsSubset2(tag_block.Parse(match), expected)
+        self.assertDictContainsSubset2(tag_block.Parse(line), expected)
 
-  def testShortSingleLine(self):
-    line = (r'\n:121650,s:r17MHOP1,c:1425327399*1D\$'
-            'ANZDA,201638.00,02,03,2015,00,00*77')
-    match = tag_block.TAG_BLOCK_RE.match(line).groupdict()
-    match['line_num'] = int(match['line_num'])
-    match['time'] = int(match['time'])
-    expected = {
-        'line_num': 121650,
-        'metadata': 'n:121650,s:r17MHOP1,c:1425327399*1D',
-        'payload': '$ANZDA,201638.00,02,03,2015,00,00*77',
-        'rcvr': 'r17MHOP1',
-        'tag_checksum': '1D',
-        'time': 1425327399}
-    self.assertDictContainsSubset2(match, expected)
-    self.assertDictContainsSubset2(tag_block.Parse(match), expected)
-    self.assertDictContainsSubset2(tag_block.Parse(line), expected)
+    def testSingleLine(self):
+        line = (
+            r"\s:Station,d:somewhere,n:2,q:u,r:123,t:A string.,"
+            r"c:1425168552,T:2015-03-01 00.09.12*3A\content"
+        )
+        match = tag_block.TAG_BLOCK_RE.match(line).groupdict()
+        match["line_num"] = int(match["line_num"])
+        match["rel_time"] = int(match["rel_time"])
+        match["time"] = int(match["time"])
+        expected = {
+            "dest": "somewhere",
+            "group": None,
+            "group_id": None,
+            "line_num": 2,
+            "payload": "content",
+            "quality": "u",
+            "rcvr": "Station",
+            "rel_time": 123,
+            "sentence_num": None,
+            "sentence_tot": None,
+            "tag_checksum": "3A",
+            "text": "A string.",
+            "text_date": "2015-03-01 00.09.12",
+            "time": 1425168552,
+        }
+        self.assertDictContainsSubset2(match, expected)
+        self.assertDictContainsSubset2(tag_block.Parse(match), expected)
+        self.assertDictContainsSubset2(tag_block.Parse(line), expected)
 
-  def testSingleLine(self):
-    line = (r'\s:Station,d:somewhere,n:2,q:u,r:123,t:A string.,'
-            r'c:1425168552,T:2015-03-01 00.09.12*3A\content')
-    match = tag_block.TAG_BLOCK_RE.match(line).groupdict()
-    match['line_num'] = int(match['line_num'])
-    match['rel_time'] = int(match['rel_time'])
-    match['time'] = int(match['time'])
-    expected = {
-        'dest': 'somewhere',
-        'group': None,
-        'group_id': None,
-        'line_num': 2,
-        'payload': 'content',
-        'quality': 'u',
-        'rcvr': 'Station',
-        'rel_time': 123,
-        'sentence_num': None,
-        'sentence_tot': None,
-        'tag_checksum': '3A',
-        'text': 'A string.',
-        'text_date': '2015-03-01 00.09.12',
-        'time': 1425168552}
-    self.assertDictContainsSubset2(match, expected)
-    self.assertDictContainsSubset2(tag_block.Parse(match), expected)
-    self.assertDictContainsSubset2(tag_block.Parse(line), expected)
+    def testFirstOfGroup(self):
+        line = (
+            r"\g:1-3-42349,n:111458,s:r003669945,c:1425327424*41\!"
+            "AIVDM,2,1,5,A,ENk`sPa17ab7W@7@1T@6;Q@0h@@=MeR4<7rpH00003v,0*16"
+        )
+        match = tag_block.TAG_BLOCK_RE.match(line).groupdict()
+        match["group_id"] = int(match["group_id"])
+        match["line_num"] = int(match["line_num"])
+        match["sentence_num"] = int(match["sentence_num"])
+        match["sentence_tot"] = int(match["sentence_tot"])
+        match["time"] = int(match["time"])
+        expected = {
+            "group": "1-3-42349",
+            "group_id": 42349,
+            "line_num": 111458,
+            "metadata": "g:1-3-42349,n:111458,s:r003669945,c:1425327424*41",
+            "payload": "!AIVDM,2,1,5,A,ENk`sPa17ab7W@7@1T@6;Q@0h@@=MeR4<7rpH00003v,0*16",
+            "rcvr": "r003669945",
+            "sentence_num": 1,
+            "sentence_tot": 3,
+            "tag_checksum": "41",
+            "time": 1425327424,
+        }
+        self.assertDictContainsSubset2(match, expected)
+        self.assertDictContainsSubset2(tag_block.Parse(match), expected)
+        self.assertDictContainsSubset2(tag_block.Parse(line), expected)
 
-  def testFirstOfGroup(self):
-    line = (r'\g:1-3-42349,n:111458,s:r003669945,c:1425327424*41\!'
-            'AIVDM,2,1,5,A,ENk`sPa17ab7W@7@1T@6;Q@0h@@=MeR4<7rpH00003v,0*16')
-    match = tag_block.TAG_BLOCK_RE.match(line).groupdict()
-    match['group_id'] = int(match['group_id'])
-    match['line_num'] = int(match['line_num'])
-    match['sentence_num'] = int(match['sentence_num'])
-    match['sentence_tot'] = int(match['sentence_tot'])
-    match['time'] = int(match['time'])
-    expected = {
-        'group': '1-3-42349',
-        'group_id': 42349,
-        'line_num': 111458,
-        'metadata': 'g:1-3-42349,n:111458,s:r003669945,c:1425327424*41',
-        'payload':
-            '!AIVDM,2,1,5,A,ENk`sPa17ab7W@7@1T@6;Q@0h@@=MeR4<7rpH00003v,0*16',
-        'rcvr': 'r003669945',
-        'sentence_num': 1,
-        'sentence_tot': 3,
-        'tag_checksum': '41',
-        'time': 1425327424}
-    self.assertDictContainsSubset2(match, expected)
-    self.assertDictContainsSubset2(tag_block.Parse(match), expected)
-    self.assertDictContainsSubset2(tag_block.Parse(line), expected)
+    def testMiddleOfGroup(self):
+        line = r"\g:2-3-42349,n:111459*15\!AIVDM,2,2,5,A,P000,2*71"
+        match = tag_block.TAG_BLOCK_RE.match(line).groupdict()
+        match["group_id"] = int(match["group_id"])
+        match["line_num"] = int(match["line_num"])
+        match["sentence_num"] = int(match["sentence_num"])
+        match["sentence_tot"] = int(match["sentence_tot"])
+        expected = {
+            "group": "2-3-42349",
+            "group_id": 42349,
+            "line_num": 111459,
+            "metadata": "g:2-3-42349,n:111459*15",
+            "payload": "!AIVDM,2,2,5,A,P000,2*71",
+            "sentence_num": 2,
+            "sentence_tot": 3,
+            "tag_checksum": "15",
+        }
+        self.assertDictContainsSubset2(match, expected)
+        self.assertDictContainsSubset2(tag_block.Parse(match), expected)
+        self.assertDictContainsSubset2(tag_block.Parse(line), expected)
 
-  def testMiddleOfGroup(self):
-    line = (r'\g:2-3-42349,n:111459*15\!AIVDM,2,2,5,A,P000,2*71')
-    match = tag_block.TAG_BLOCK_RE.match(line).groupdict()
-    match['group_id'] = int(match['group_id'])
-    match['line_num'] = int(match['line_num'])
-    match['sentence_num'] = int(match['sentence_num'])
-    match['sentence_tot'] = int(match['sentence_tot'])
-    expected = {
-        'group': '2-3-42349',
-        'group_id': 42349,
-        'line_num': 111459,
-        'metadata': 'g:2-3-42349,n:111459*15',
-        'payload': '!AIVDM,2,2,5,A,P000,2*71',
-        'sentence_num': 2,
-        'sentence_tot': 3,
-        'tag_checksum': '15'}
-    self.assertDictContainsSubset2(match, expected)
-    self.assertDictContainsSubset2(tag_block.Parse(match), expected)
-    self.assertDictContainsSubset2(tag_block.Parse(line), expected)
+    def testEndOfGroup(self):
+        line = (
+            r"\g:3-3-42349,n:111460*1E\$"
+            "ARVSI,r003669945,5,201704.05687473,0152,-085,0*2E"
+        )
+        match = tag_block.TAG_BLOCK_RE.match(line).groupdict()
+        match["group_id"] = int(match["group_id"])
+        match["line_num"] = int(match["line_num"])
+        match["sentence_num"] = int(match["sentence_num"])
+        match["sentence_tot"] = int(match["sentence_tot"])
+        expected = {
+            "group": "3-3-42349",
+            "group_id": 42349,
+            "line_num": 111460,
+            "metadata": "g:3-3-42349,n:111460*1E",
+            "payload": "$ARVSI,r003669945,5,201704.05687473,0152,-085,0*2E",
+            "sentence_num": 3,
+            "sentence_tot": 3,
+            "tag_checksum": "1E",
+        }
+        self.assertDictContainsSubset2(match, expected)
+        self.assertDictContainsSubset2(tag_block.Parse(match), expected)
+        self.assertDictContainsSubset2(tag_block.Parse(line), expected)
 
-  def testEndOfGroup(self):
-    line = (r'\g:3-3-42349,n:111460*1E\$'
-            'ARVSI,r003669945,5,201704.05687473,0152,-085,0*2E')
-    match = tag_block.TAG_BLOCK_RE.match(line).groupdict()
-    match['group_id'] = int(match['group_id'])
-    match['line_num'] = int(match['line_num'])
-    match['sentence_num'] = int(match['sentence_num'])
-    match['sentence_tot'] = int(match['sentence_tot'])
-    expected = {
-        'group': '3-3-42349',
-        'group_id': 42349,
-        'line_num': 111460,
-        'metadata': 'g:3-3-42349,n:111460*1E',
-        'payload': '$ARVSI,r003669945,5,201704.05687473,0152,-085,0*2E',
-        'sentence_num': 3,
-        'sentence_tot': 3,
-        'tag_checksum': '1E'}
-    self.assertDictContainsSubset2(match, expected)
-    self.assertDictContainsSubset2(tag_block.Parse(match), expected)
-    self.assertDictContainsSubset2(tag_block.Parse(line), expected)
-
-  def testOrbcommFieldT(self):
-    line = (r'\s:rORBCOMM999,q:u,c:1424995200,T:2015-02-27 00.00.00*51\!'
-            'AIVDM,1,1,,A,14VIk0002sMM04vE>V9jGimn08RP,0*0D')
-    match = tag_block.TAG_BLOCK_RE.match(line).groupdict()
-    match['time'] = int(match['time'])
-    expected = {
-        'metadata': 's:rORBCOMM999,q:u,c:1424995200,T:2015-02-27 00.00.00*51',
-        'payload': '!AIVDM,1,1,,A,14VIk0002sMM04vE>V9jGimn08RP,0*0D',
-        'quality': 'u',
-        'rcvr': 'rORBCOMM999',
-        'tag_checksum': '51',
-        'text_date': '2015-02-27 00.00.00',
-        'time': 1424995200}
-    self.assertDictContainsSubset2(match, expected)
-    self.assertDictContainsSubset2(tag_block.Parse(match), expected)
-    self.assertDictContainsSubset2(tag_block.Parse(line), expected)
+    def testOrbcommFieldT(self):
+        line = (
+            r"\s:rORBCOMM999,q:u,c:1424995200,T:2015-02-27 00.00.00*51\!"
+            "AIVDM,1,1,,A,14VIk0002sMM04vE>V9jGimn08RP,0*0D"
+        )
+        match = tag_block.TAG_BLOCK_RE.match(line).groupdict()
+        match["time"] = int(match["time"])
+        expected = {
+            "metadata": "s:rORBCOMM999,q:u,c:1424995200,T:2015-02-27 00.00.00*51",
+            "payload": "!AIVDM,1,1,,A,14VIk0002sMM04vE>V9jGimn08RP,0*0D",
+            "quality": "u",
+            "rcvr": "rORBCOMM999",
+            "tag_checksum": "51",
+            "text_date": "2015-02-27 00.00.00",
+            "time": 1424995200,
+        }
+        self.assertDictContainsSubset2(match, expected)
+        self.assertDictContainsSubset2(tag_block.Parse(match), expected)
+        self.assertDictContainsSubset2(tag_block.Parse(line), expected)
 
 
 class TagQueueTestSingleLines(TagTestCase):
+    def testNonTagBlockLines(self):
+        queue = tag_block.TagQueue()
+        queue.put("1")
+        self.assertEqual(queue.qsize(), 1)
+        queue.put("2")
+        self.assertEqual(queue.qsize(), 2)
+        self.assertEqual(
+            queue.get(),
+            {
+                "line_nums": [1],
+                "lines": ["1"],
+            },
+        )
+        self.assertEqual(queue.qsize(), 1)
+        self.assertEqual(
+            queue.get(),
+            {
+                "line_nums": [2],
+                "lines": ["2"],
+            },
+        )
+        self.assertEqual(queue.qsize(), 0)
+        queue.put("3")
+        self.assertEqual(
+            queue.get(),
+            {
+                "line_nums": [3],
+                "lines": ["3"],
+            },
+        )
 
-  def testNonTagBlockLines(self):
-    queue = tag_block.TagQueue()
-    queue.put('1')
-    self.assertEqual(queue.qsize(), 1)
-    queue.put('2')
-    self.assertEqual(queue.qsize(), 2)
-    self.assertEqual(queue.get(), {
-        'line_nums': [1],
-        'lines': ['1'],
-    })
-    self.assertEqual(queue.qsize(), 1)
-    self.assertEqual(queue.get(), {
-        'line_nums': [2],
-        'lines': ['2'],
-    })
-    self.assertEqual(queue.qsize(), 0)
-    queue.put('3')
-    self.assertEqual(queue.get(), {
-        'line_nums': [3],
-        'lines': ['3'],
-    })
+    def testMultipleTagLines(self):
+        queue = tag_block.TagQueue()
+        queue.put(r"\s:station1,c:1425344187*78\a")
+        queue.put(r"\s:spacecraft2,c:1425344304*0E\b")
+        queue.put(r"\c:1425344187,s:station1*78\c")
 
-  def testMultipleTagLines(self):
-    queue = tag_block.TagQueue()
-    queue.put(r'\s:station1,c:1425344187*78\a')
-    queue.put(r'\s:spacecraft2,c:1425344304*0E\b')
-    queue.put(r'\c:1425344187,s:station1*78\c')
+        self.assertEqual(queue.qsize(), 3)
 
-    self.assertEqual(queue.qsize(), 3)
+        item = queue.get()
+        self.assertDictContainsSubset2(
+            item,
+            {
+                "line_nums": [1],
+                "lines": ["\\s:station1,c:1425344187*78\\a"],
+                "times": [1425344187],
+            },
+        )
+        expected_match = {
+            "group": None,
+            "group_id": None,
+            "metadata": "s:station1,c:1425344187*78",
+            "payload": "a",
+            "rcvr": "station1",
+            "tag_checksum": "78",
+            "time": 1425344187,
+        }
+        self.assertDictContainsSubset2(item["matches"][0], expected_match)
 
-    item = queue.get()
-    self.assertDictContainsSubset2(item, {
-        'line_nums': [1],
-        'lines': ['\\s:station1,c:1425344187*78\\a'],
-        'times': [1425344187]})
-    expected_match = {
-        'group': None,
-        'group_id': None,
-        'metadata': 's:station1,c:1425344187*78',
-        'payload': 'a',
-        'rcvr': 'station1',
-        'tag_checksum': '78',
-        'time': 1425344187}
-    self.assertDictContainsSubset2(item['matches'][0], expected_match)
+        item = queue.get()
+        self.assertDictContainsSubset2(
+            item,
+            {
+                "line_nums": [2],
+                "lines": ["\\s:spacecraft2,c:1425344304*0E\\b"],
+                "times": [1425344304],
+            },
+        )
+        expected_match = {
+            "group": None,
+            "group_id": None,
+            "metadata": "s:spacecraft2,c:1425344304*0E",
+            "payload": "b",
+            "rcvr": "spacecraft2",
+            "tag_checksum": "0E",
+            "time": 1425344304,
+        }
+        self.assertDictContainsSubset2(item["matches"][0], expected_match)
 
-    item = queue.get()
-    self.assertDictContainsSubset2(item, {
-        'line_nums': [2],
-        'lines': ['\\s:spacecraft2,c:1425344304*0E\\b'],
-        'times': [1425344304]})
-    expected_match = {
-        'group': None,
-        'group_id': None,
-        'metadata': 's:spacecraft2,c:1425344304*0E',
-        'payload': 'b',
-        'rcvr': 'spacecraft2',
-        'tag_checksum': '0E',
-        'time': 1425344304}
-    self.assertDictContainsSubset2(item['matches'][0], expected_match)
-
-    item = queue.get()
-    self.assertDictContainsSubset2(item, {
-        'line_nums': [3],
-        'lines': ['\\c:1425344187,s:station1*78\\c'],
-        'times': [1425344187]})
-    expected_match = {
-        'group': None,
-        'group_id': None,
-        'metadata': 'c:1425344187,s:station1*78',
-        'rcvr': 'station1',
-        'tag_checksum': '78',
-        'time': 1425344187}
-    self.assertDictContainsSubset2(item['matches'][0], expected_match)
+        item = queue.get()
+        self.assertDictContainsSubset2(
+            item,
+            {
+                "line_nums": [3],
+                "lines": ["\\c:1425344187,s:station1*78\\c"],
+                "times": [1425344187],
+            },
+        )
+        expected_match = {
+            "group": None,
+            "group_id": None,
+            "metadata": "c:1425344187,s:station1*78",
+            "rcvr": "station1",
+            "tag_checksum": "78",
+            "time": 1425344187,
+        }
+        self.assertDictContainsSubset2(item["matches"][0], expected_match)
 
 
 class TagQueueGroupsTest(TagTestCase):
+    def testTwoLines(self):
+        lines = (r"\s:rcvr42,g:1-2-13*2A\abc", r"\g:2-2-13*5F\def")
+        queue = tag_block.TagQueue()
+        queue.put(lines[0])
+        self.assertEqual(queue.qsize(), 0)
 
-  def testTwoLines(self):
-    lines = (r'\s:rcvr42,g:1-2-13*2A\abc', r'\g:2-2-13*5F\def')
-    queue = tag_block.TagQueue()
-    queue.put(lines[0])
-    self.assertEqual(queue.qsize(), 0)
+        queue.put(lines[1])
+        self.assertEqual(queue.qsize(), 1)
 
-    queue.put(lines[1])
-    self.assertEqual(queue.qsize(), 1)
-
-  def testMissingFirst(self):
-    queue = tag_block.TagQueue()
-    # Queue should drop the message without the first part.
-    queue.put(r'\g:2-2-13*5F\def')
-    self.assertEqual(queue.qsize(), 0)
-    self.assertEqual(len(queue.groups), 0)
+    def testMissingFirst(self):
+        queue = tag_block.TagQueue()
+        # Queue should drop the message without the first part.
+        queue.put(r"\g:2-2-13*5F\def")
+        self.assertEqual(queue.qsize(), 0)
+        self.assertEqual(len(queue.groups), 0)
 
 
 class DecodeTagBlockTest(TagTestCase):
+    def testSingleLineMessage(self):
+        # Do one detailed comparison.
+        expected = {
+            "decoded": {
+                "cog": 142,
+                "gnss": True,
+                "id": 27,
+                "md5": "fb6a0946b7dc8a6a4f5d06db113793d5",
+                "mmsi": 577305000,
+                "nav_status": 5,
+                "position_accuracy": 1,
+                "raim": False,
+                "repeat_indicator": 0,
+                "sog": 0,
+                "spare": 0,
+                "x": -90.20666666666666,
+                "y": 29.145,
+            },
+            "line_nums": [1],
+            # pylint: disable=line-too-long
+            "lines": [
+                "\\n:852057,s:b003669955,c:1428451729*1B\\!ABVDM,1,1,,A,K8VSqb9LdU28WP8p,0*49"
+            ],
+            "matches": [
+                {
+                    "dest": None,
+                    "group": None,
+                    "group_id": None,
+                    "line_num": 852057,
+                    "metadata": "n:852057,s:b003669955,c:1428451729*1B",
+                    "payload": "!ABVDM,1,1,,A,K8VSqb9LdU28WP8p,0*49",
+                    "quality": None,
+                    "rcvr": "b003669955",
+                    "rel_time": None,
+                    "sentence_num": None,
+                    "sentence_tot": None,
+                    "tag_checksum": "1B",
+                    "text": None,
+                    "text_date": None,
+                    "time": 1428451729,
+                }
+            ],
+            "times": [1428451729],
+        }
 
-  def testSingleLineMessage(self):
-    # Do one detailed comparison.
-    expected = {
-        'decoded': {
-            'cog': 142,
-            'gnss': True,
-            'id': 27,
-            'md5': 'fb6a0946b7dc8a6a4f5d06db113793d5',
-            'mmsi': 577305000,
-            'nav_status': 5,
-            'position_accuracy': 1,
-            'raim': False,
-            'repeat_indicator': 0,
-            'sog': 0,
-            'spare': 0,
-            'x': -90.20666666666666,
-            'y': 29.145},
-        'line_nums': [1],
-        # pylint: disable=line-too-long
-        'lines': ['\\n:852057,s:b003669955,c:1428451729*1B\\!ABVDM,1,1,,A,K8VSqb9LdU28WP8p,0*49'],
-        'matches': [{
-            'dest': None,
-            'group': None,
-            'group_id': None,
-            'line_num': 852057,
-            'metadata': 'n:852057,s:b003669955,c:1428451729*1B',
-            'payload': '!ABVDM,1,1,,A,K8VSqb9LdU28WP8p,0*49',
-            'quality': None,
-            'rcvr': 'b003669955',
-            'rel_time': None,
-            'sentence_num': None,
-            'sentence_tot': None,
-            'tag_checksum': '1B',
-            'text': None,
-            'text_date': None,
-            'time': 1428451729}],
-        'times': [1428451729]}
-
-    line = (
-        # pylint: disable=line-too-long
-        r'\n:852057,s:b003669955,c:1428451729*1B\!ABVDM,1,1,,A,K8VSqb9LdU28WP8p,0*49'
-    )
-
-    queue = tag_block.TagQueue()
-    queue.put(line)
-    self.assertEqual(queue.qsize(), 1)
-    msg = queue.get(line)
-    self.assertEqual(msg, expected)
-
-  def testManySingleLineMessages(self):
-    lines = [line for line in SINGLE_LINE_MESSAGES.split('\n') if 'VD' in line]
-    queue = tag_block.TagQueue()
-    for line in lines:
-      queue.put(line)
-    self.assertEqual(queue.qsize(), len(lines))
-    msgs = []
-    while not queue.empty():
-      msgs.append(queue.get())
-    self.assertEqual(len(msgs), len(lines))
-    for msg in msgs:
-      self.assertIn('decoded', msg)
-    id_list = [msg['decoded']['id'] for msg in msgs]
-    self.assertEqual(
-        id_list,
-        [
-            1, 2, 3, 1, 2, 2, 3, 3, 4, 7, 10, 11, 12, 12, 14, 14, 15, 15, 18,
-            18, 20, 20, 20, 21, 21, 22, 23, 24, 24, 24, 25, 26, 26, 26, 27
-        ])
-
-  def testTwoLineGroupWithSingleLineMessage(self):
-
-    lines = (
-        # pylint: disable=line-too-long
-        r'\g:1-2-89372,n:192113,s:r003669946,c:1428451252*41\!AIVDM,1,1,,A,181520h000JstMLHbOFc1CUd0<07,0*35',
-        r'\g:2-2-89372,n:192114*1C\$ARVSI,r003669946,,000052.59031009,1972,-108,0*1B'
+        line = (
+            # pylint: disable=line-too-long
+            r"\n:852057,s:b003669955,c:1428451729*1B\!ABVDM,1,1,,A,K8VSqb9LdU28WP8p,0*49"
         )
-    queue = tag_block.TagQueue()
-    for line in lines:
-      queue.put(line)
-    self.assertEqual(queue.qsize(), 1)
-    msg = queue.get()
-    self.assertEqual(msg['decoded']['id'], 1)
 
-  def testTwoLineGroupWithTwoLineMessage(self):
-    lines = (
-        # pylint: disable=line-too-long
-        r'\g:1-2-9459,s:rORBCOMM009,c:1426032120,T:2015-03-11 00.02.00*31\!AIVDM,2,1,9,A,59NS9142>SW@7PQWR20u84pLF1=Dr2222222221SDHa?A0l;`CDhCU3lp888,0*5B',
-        r'\g:2-2-9459,s:rORBCOMM009,c:1426032120,T:2015-03-11 00.02.00*32\!AIVDM,2,2,9,A,88888888880,2*2D',
+        queue = tag_block.TagQueue()
+        queue.put(line)
+        self.assertEqual(queue.qsize(), 1)
+        msg = queue.get(line)
+        self.assertEqual(msg, expected)
+
+    def testManySingleLineMessages(self):
+        lines = [line for line in SINGLE_LINE_MESSAGES.split("\n") if "VD" in line]
+        queue = tag_block.TagQueue()
+        for line in lines:
+            queue.put(line)
+        self.assertEqual(queue.qsize(), len(lines))
+        msgs = []
+        while not queue.empty():
+            msgs.append(queue.get())
+        self.assertEqual(len(msgs), len(lines))
+        for msg in msgs:
+            self.assertIn("decoded", msg)
+        id_list = [msg["decoded"]["id"] for msg in msgs]
+        self.assertEqual(
+            id_list,
+            [
+                1,
+                2,
+                3,
+                1,
+                2,
+                2,
+                3,
+                3,
+                4,
+                7,
+                10,
+                11,
+                12,
+                12,
+                14,
+                14,
+                15,
+                15,
+                18,
+                18,
+                20,
+                20,
+                20,
+                21,
+                21,
+                22,
+                23,
+                24,
+                24,
+                24,
+                25,
+                26,
+                26,
+                26,
+                27,
+            ],
         )
-    queue = tag_block.TagQueue()
-    for line in lines:
-      queue.put(line)
-    self.assertEqual(queue.qsize(), 1)
-    msg = queue.get()
-    self.assertEqual(msg['decoded']['id'], 5)
-    self.assertEqual(msg['times'], [1426032120, 1426032120])
 
-  def testThreeLineGroupWithTwoLineMessage(self):
-    lines = (
-        # pylint: disable=line-too-long
-        r'\g:1-3-6417,n:4504,s:D13MN-PS-MTEBS1,c:1428451206*07\!SAVDM,2,1,7,B,59NSGLD2Cn5@CDLkN21Tu8dL5@F2222222222216EHMC=4w`0L@hEPC`8888,0*1A',
-        r'\g:2-3-6417,n:4505*24\!SAVDM,2,2,7,B,88888888880,2*3A',
-        r'\g:3-3-6417,n:4506*26\$SAVSI,D13MN-PS-MTEBS1,7,000006.831194,256,-97,19*67',
-    )
-    queue = tag_block.TagQueue()
-    for line in lines:
-      queue.put(line)
-    self.assertEqual(queue.qsize(), 1)
-    msg = queue.get()
-    self.assertEqual(msg['decoded']['id'], 5)
-    self.assertEqual(msg['times'], [1428451206, None, None])
+    def testTwoLineGroupWithSingleLineMessage(self):
+
+        lines = (
+            # pylint: disable=line-too-long
+            r"\g:1-2-89372,n:192113,s:r003669946,c:1428451252*41\!AIVDM,1,1,,A,181520h000JstMLHbOFc1CUd0<07,0*35",
+            r"\g:2-2-89372,n:192114*1C\$ARVSI,r003669946,,000052.59031009,1972,-108,0*1B",
+        )
+        queue = tag_block.TagQueue()
+        for line in lines:
+            queue.put(line)
+        self.assertEqual(queue.qsize(), 1)
+        msg = queue.get()
+        self.assertEqual(msg["decoded"]["id"], 1)
+
+    def testTwoLineGroupWithTwoLineMessage(self):
+        lines = (
+            # pylint: disable=line-too-long
+            r"\g:1-2-9459,s:rORBCOMM009,c:1426032120,T:2015-03-11 00.02.00*31\!AIVDM,2,1,9,A,59NS9142>SW@7PQWR20u84pLF1=Dr2222222221SDHa?A0l;`CDhCU3lp888,0*5B",
+            r"\g:2-2-9459,s:rORBCOMM009,c:1426032120,T:2015-03-11 00.02.00*32\!AIVDM,2,2,9,A,88888888880,2*2D",
+        )
+        queue = tag_block.TagQueue()
+        for line in lines:
+            queue.put(line)
+        self.assertEqual(queue.qsize(), 1)
+        msg = queue.get()
+        self.assertEqual(msg["decoded"]["id"], 5)
+        self.assertEqual(msg["times"], [1426032120, 1426032120])
+
+    def testThreeLineGroupWithTwoLineMessage(self):
+        lines = (
+            # pylint: disable=line-too-long
+            r"\g:1-3-6417,n:4504,s:D13MN-PS-MTEBS1,c:1428451206*07\!SAVDM,2,1,7,B,59NSGLD2Cn5@CDLkN21Tu8dL5@F2222222222216EHMC=4w`0L@hEPC`8888,0*1A",
+            r"\g:2-3-6417,n:4505*24\!SAVDM,2,2,7,B,88888888880,2*3A",
+            r"\g:3-3-6417,n:4506*26\$SAVSI,D13MN-PS-MTEBS1,7,000006.831194,256,-97,19*67",
+        )
+        queue = tag_block.TagQueue()
+        for line in lines:
+            queue.put(line)
+        self.assertEqual(queue.qsize(), 1)
+        msg = queue.get()
+        self.assertEqual(msg["decoded"]["id"], 5)
+        self.assertEqual(msg["times"], [1428451206, None, None])
 
 
 class DecodeTagSingleTest(TagTestCase):
+    valid_payload = "!AIVDM,1,1,,A,14VIk0002sMM04vE>V9jGimn08RP,0*0D"
 
-  valid_payload = '!AIVDM,1,1,,A,14VIk0002sMM04vE>V9jGimn08RP,0*0D'
+    def test_happy_path(self):
+        msg = {"matches": [{"payload": self.valid_payload}]}
+        decoded = tag_block.DecodeTagSingle(msg)
+        self.assertIsNotNone(decoded)
+        self.assertIn("md5", decoded)
+        self.assertEqual(decoded.get("id"), 1)
 
-  def test_happy_path(self):
-    msg = {'matches': [{'payload': self.valid_payload}]}
-    decoded = tag_block.DecodeTagSingle(msg)
-    self.assertIsNotNone(decoded)
-    self.assertIn('md5', decoded)
-    self.assertEqual(decoded.get('id'), 1)
+    def test_invalid_parse(self):
+        msg = {"matches": [{"payload": "INVALID_DATA_NOT_A_VDM_MESSAGE"}]}
+        decoded = tag_block.DecodeTagSingle(msg)
+        self.assertIsNone(decoded)
 
-  def test_invalid_parse(self):
-    msg = {'matches': [{'payload': 'INVALID_DATA_NOT_A_VDM_MESSAGE'}]}
-    decoded = tag_block.DecodeTagSingle(msg)
-    self.assertIsNone(decoded)
+    def test_multi_line_error(self):
+        msg = {
+            "matches": [{"payload": "!AIVDM,2,1,,A,14VIk0002sMM04vE>V9jGimn08RP,0*0E"}]
+        }
+        decoded = tag_block.DecodeTagSingle(msg)
+        self.assertIsNone(decoded)
 
-  def test_multi_line_error(self):
-    msg = {'matches': [{'payload': '!AIVDM,2,1,,A,14VIk0002sMM04vE>V9jGimn08RP,0*0E'}]}
-    decoded = tag_block.DecodeTagSingle(msg)
-    self.assertIsNone(decoded)
-
-  def test_decode_error(self):
-    # This payload should throw DecodeError during ais.decode.
-    # Providing too few bits for body by passing bad payload or using mock.
-    msg = {'matches': [{'payload': self.valid_payload}]}
-    with mock.patch.object(ais, 'decode', side_effect=ais.DecodeError("decode error")):
-      decoded = tag_block.DecodeTagSingle(msg)
-      self.assertIsNone(decoded)
+    def test_decode_error(self):
+        # This payload should throw DecodeError during ais.decode.
+        # Providing too few bits for body by passing bad payload or using mock.
+        msg = {"matches": [{"payload": self.valid_payload}]}
+        with mock.patch.object(
+            ais, "decode", side_effect=ais.DecodeError("decode error")
+        ):
+            decoded = tag_block.DecodeTagSingle(msg)
+            self.assertIsNone(decoded)
 
 
 class DecodeTagMultipleTest(TagTestCase):
+    def test_happy_path(self):
+        msg = {
+            "matches": [
+                {
+                    "payload": "!AIVDM,2,1,9,A,59NS9142>SW@7PQWR20u84pLF1=Dr2222222221SDHa?A0l;`CDhCU3lp888,0*5B"
+                },
+                {"payload": "!AIVDM,2,2,9,A,88888888880,2*2D"},
+            ]
+        }
+        decoded = tag_block.DecodeTagMultiple(msg)
+        self.assertIsNotNone(decoded)
+        self.assertIn("md5", decoded)
+        self.assertEqual(decoded.get("id"), 5)
 
-  def test_happy_path(self):
-    msg = {
-        'matches': [
-            {'payload': '!AIVDM,2,1,9,A,59NS9142>SW@7PQWR20u84pLF1=Dr2222222221SDHa?A0l;`CDhCU3lp888,0*5B'},
-            {'payload': '!AIVDM,2,2,9,A,88888888880,2*2D'}
-        ]
-    }
-    decoded = tag_block.DecodeTagMultiple(msg)
-    self.assertIsNotNone(decoded)
-    self.assertIn('md5', decoded)
-    self.assertEqual(decoded.get('id'), 5)
+    def test_qsize_not_one(self):
+        # Providing only the first part of a two-part message.
+        # The BareQueue will not yield a complete message, so qsize() == 0.
+        msg = {
+            "matches": [
+                {
+                    "payload": "!AIVDM,2,1,9,A,59NS9142>SW@7PQWR20u84pLF1=Dr2222222221SDHa?A0l;`CDhCU3lp888,0*5B"
+                }
+            ]
+        }
+        decoded = tag_block.DecodeTagMultiple(msg)
+        self.assertIsNone(decoded)
 
-  def test_qsize_not_one(self):
-    # Providing only the first part of a two-part message.
-    # The BareQueue will not yield a complete message, so qsize() == 0.
-    msg = {
-        'matches': [
-            {'payload': '!AIVDM,2,1,9,A,59NS9142>SW@7PQWR20u84pLF1=Dr2222222221SDHa?A0l;`CDhCU3lp888,0*5B'}
-        ]
-    }
-    decoded = tag_block.DecodeTagMultiple(msg)
-    self.assertIsNone(decoded)
-
-  def test_decode_error(self):
-    msg = {
-        'matches': [
-            {'payload': '!AIVDM,2,1,9,A,59NS9142>SW@7PQWR20u84pLF1=Dr2222222221SDHa?A0l;`CDhCU3lp888,0*5B'},
-            {'payload': '!AIVDM,2,2,9,A,88888888880,2*2D'}
-        ]
-    }
-    with mock.patch.object(ais, 'decode', side_effect=ais.DecodeError("decode error")):
-      decoded = tag_block.DecodeTagMultiple(msg)
-      self.assertIsNone(decoded)
+    def test_decode_error(self):
+        msg = {
+            "matches": [
+                {
+                    "payload": "!AIVDM,2,1,9,A,59NS9142>SW@7PQWR20u84pLF1=Dr2222222221SDHa?A0l;`CDhCU3lp888,0*5B"
+                },
+                {"payload": "!AIVDM,2,2,9,A,88888888880,2*2D"},
+            ]
+        }
+        with mock.patch.object(
+            ais, "decode", side_effect=ais.DecodeError("decode error")
+        ):
+            decoded = tag_block.DecodeTagMultiple(msg)
+            self.assertIsNone(decoded)
 
 
-if __name__ == '__main__':
-  unittest.main()
+if __name__ == "__main__":
+    unittest.main()

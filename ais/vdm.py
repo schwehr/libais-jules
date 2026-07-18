@@ -69,7 +69,7 @@ from ais import nmea
 from ais import nmea_messages
 from ais import util
 
-logger = logging.getLogger('libais')
+logger = logging.getLogger("libais")
 
 # Orbcomm sometimes leaves out the channel.
 # TAG BLOCKS use "sentence" as the regex group name.  Use sen here to
@@ -86,157 +86,168 @@ VDM_RE_STR = r"""(?P<vdm>
 """
 
 VDM_RE = re.compile(VDM_RE_STR, re.VERBOSE)
-NUMERIC_FIELDS = ('fill_bits', 'sen_num', 'sen_tot', 'seq_id')
+NUMERIC_FIELDS = ("fill_bits", "sen_num", "sen_tot", "seq_id")
 
 
 def VdmLines(lines: Iterable[str]) -> Iterator[str]:
-  """Yield only the lines that contain AIS messages.
+    """Yield only the lines that contain AIS messages.
 
-  Args:
-    lines: An iterable series of strings.
+    Args:
+      lines: An iterable series of strings.
 
-  Yields:
-    Lines that look like they probably contain valid VDM/VDO messages.
-  """
-  for line in lines:
-    line = line.rstrip()
-    if nmea.ID_BARE_VDM_RE.match(line):
-      yield line
+    Yields:
+      Lines that look like they probably contain valid VDM/VDO messages.
+    """
+    for line in lines:
+        line = line.rstrip()
+        if nmea.ID_BARE_VDM_RE.match(line):
+            yield line
 
 
 def Parse(data: str) -> dict[str, Any] | None:
-  """Unpack a NMEA VDM AIS message line(s)."""
+    """Unpack a NMEA VDM AIS message line(s)."""
 
-  if not isinstance(data, str):
-    raise NotImplementedError
+    if not isinstance(data, str):
+        raise NotImplementedError
 
-  try:
-    result = VDM_RE.search(data).groupdict()
-  except AttributeError:
-    return
+    try:
+        result = VDM_RE.search(data).groupdict()
+    except AttributeError:
+        return
 
-  result.update({k: util.MaybeToNumber(v)
-                 for k, v in result.items() if k in NUMERIC_FIELDS})
+    result.update(
+        {k: util.MaybeToNumber(v) for k, v in result.items() if k in NUMERIC_FIELDS}
+    )
 
-  actual = nmea.Checksum(result['vdm'])
-  expected = result['checksum']
-  if actual != expected:
-    return
+    actual = nmea.Checksum(result["vdm"])
+    expected = result["checksum"]
+    if actual != expected:
+        return
 
-  return result
+    return result
 
 
 class BareQueue(Queue.Queue):
-  """Build complete AIS messages and create a queue of decoded content.
+    """Build complete AIS messages and create a queue of decoded content.
 
-  Manages parsing a stream of NMEA AIS VDM messages.  Single line
-  messages are decoded and added to the queue.  Parts of multi-line VDM
-  messages are stored until a complete message is available.  The
-  bodies of each part are joined with the fill_bit count from the final
-  sentence are decoded and added to the queue.
-  """
+    Manages parsing a stream of NMEA AIS VDM messages.  Single line
+    messages are decoded and added to the queue.  Parts of multi-line VDM
+    messages are stored until a complete message is available.  The
+    bodies of each part are joined with the fill_bit count from the final
+    sentence are decoded and added to the queue.
+    """
 
-  def __init__(self):
-    self.groups: dict[int, dict[str, Any]] = {}
-    self.line_num: int = 0
-    Queue.Queue.__init__(self)
+    def __init__(self):
+        self.groups: dict[int, dict[str, Any]] = {}
+        self.line_num: int = 0
+        Queue.Queue.__init__(self)
 
-  def put(self, line: str, line_num: int | None = None) -> None:
-    """Add a line of NMEA or raw text to the queue."""
+    def put(self, line: str, line_num: int | None = None) -> None:
+        """Add a line of NMEA or raw text to the queue."""
 
-    if line_num is not None:
-      self.line_num = line_num
-    else:
-      self.line_num += 1
-      line_num = self.line_num
+        if line_num is not None:
+            self.line_num = line_num
+        else:
+            self.line_num += 1
+            line_num = self.line_num
 
-    line = line.rstrip()
-    match = Parse(line)
+        line = line.rstrip()
+        match = Parse(line)
 
-    if not match:
-      logger.info('No VDM match for line: %d, %s', line_num, line)
-      msg = {
-          'line_nums': [line_num],
-          'lines': [line]}
-      decoded = nmea_messages.DecodeLine(line)
-      if decoded:
-        msg['decoded'] = decoded
-      else:
-        logger.info('No NMEA match for line: %d, %s', line_num, line)
-      Queue.Queue.put(self, msg)
-      return
+        if not match:
+            logger.info("No VDM match for line: %d, %s", line_num, line)
+            msg = {"line_nums": [line_num], "lines": [line]}
+            decoded = nmea_messages.DecodeLine(line)
+            if decoded:
+                msg["decoded"] = decoded
+            else:
+                logger.info("No NMEA match for line: %d, %s", line_num, line)
+            Queue.Queue.put(self, msg)
+            return
 
-    sentence_total = int(match['sen_tot'])
-    if sentence_total == 1:
-      body = match['body']
-      fill_bits = int(match['fill_bits'])
-      try:
-        decoded = ais.decode(body, fill_bits)
-      except ais.DecodeError as error:
-        logger.error(
-            'Unable to decode message: %s\n  %d %s', error, line_num, line)
-        return
-      decoded['md5'] = hashlib.md5(body.encode('utf-8')).hexdigest()
-      Queue.Queue.put(self, {
-          'line_nums': [line_num],
-          'lines': [line],
-          'decoded': decoded,
-          'matches': [match]
-      })
-      return
+        sentence_total = int(match["sen_tot"])
+        if sentence_total == 1:
+            body = match["body"]
+            fill_bits = int(match["fill_bits"])
+            try:
+                decoded = ais.decode(body, fill_bits)
+            except ais.DecodeError as error:
+                logger.error(
+                    "Unable to decode message: %s\n  %d %s", error, line_num, line
+                )
+                return
+            decoded["md5"] = hashlib.md5(body.encode("utf-8")).hexdigest()
+            Queue.Queue.put(
+                self,
+                {
+                    "line_nums": [line_num],
+                    "lines": [line],
+                    "decoded": decoded,
+                    "matches": [match],
+                },
+            )
+            return
 
-    sentence_num = int(match['sen_num'])
-    group_id = int(match['seq_id'])
+        sentence_num = int(match["sen_num"])
+        group_id = int(match["seq_id"])
 
-    if sentence_num == 1:
-      if group_id in self.groups:
-        logger.error('Incomplete message overwritten by new start.  '
-                      'Dropped:\n  %s', self.groups[group_id])
-      self.groups[group_id] = {
-          'line_nums': [None] * sentence_total,
-          'lines': [None] * sentence_total,
-          'matches': [None] * sentence_total,
-          'count': 1
-      }
-      self.groups[group_id]['line_nums'][0] = line_num
-      self.groups[group_id]['lines'][0] = line
-      self.groups[group_id]['matches'][0] = match
-      return
+        if sentence_num == 1:
+            if group_id in self.groups:
+                logger.error(
+                    "Incomplete message overwritten by new start.  Dropped:\n  %s",
+                    self.groups[group_id],
+                )
+            self.groups[group_id] = {
+                "line_nums": [None] * sentence_total,
+                "lines": [None] * sentence_total,
+                "matches": [None] * sentence_total,
+                "count": 1,
+            }
+            self.groups[group_id]["line_nums"][0] = line_num
+            self.groups[group_id]["lines"][0] = line
+            self.groups[group_id]["matches"][0] = match
+            return
 
-    if group_id not in self.groups:
-      logger.error('Do not have the prior lines in group_id %d. '
-                    'Dropping: \n  %s', group_id, line)
-      return
+        if group_id not in self.groups:
+            logger.error(
+                "Do not have the prior lines in group_id %d. Dropping: \n  %s",
+                group_id,
+                line,
+            )
+            return
 
-    entry = self.groups[group_id]
-    if entry['count'] != sentence_num - 1:
-      logger.error('Out of sequence message.  Dropping: %d != %d \n %s',
-                    entry['count'], sentence_num - 1, line)
-      return
+        entry = self.groups[group_id]
+        if entry["count"] != sentence_num - 1:
+            logger.error(
+                "Out of sequence message.  Dropping: %d != %d \n %s",
+                entry["count"],
+                sentence_num - 1,
+                line,
+            )
+            return
 
-    idx = sentence_num - 1
-    entry['lines'][idx] = line
-    entry['matches'][idx] = match
-    entry['line_nums'][idx] = line_num
-    entry['count'] += 1
+        idx = sentence_num - 1
+        entry["lines"][idx] = line
+        entry["matches"][idx] = match
+        entry["line_nums"][idx] = line_num
+        entry["count"] += 1
 
-    if sentence_num != sentence_total:
-      # Nothing more to do in the middle of a sequence of sentences.
-      return
+        if sentence_num != sentence_total:
+            # Nothing more to do in the middle of a sequence of sentences.
+            return
 
-    body = ''.join([m['body'] for m in entry['matches'] if m is not None])
-    fill_bits = int(match['fill_bits'])
-    try:
-      decoded = ais.decode(body, fill_bits)
-    except ais.DecodeError as error:
-      logger.error(
-          'Unable to decode message: %s\n%s', error, entry)
-      return
-    decoded['md5'] = hashlib.md5(body.encode('utf-8')).hexdigest()
-    entry['decoded'] = decoded
+        body = "".join([m["body"] for m in entry["matches"] if m is not None])
+        fill_bits = int(match["fill_bits"])
+        try:
+            decoded = ais.decode(body, fill_bits)
+        except ais.DecodeError as error:
+            logger.error("Unable to decode message: %s\n%s", error, entry)
+            return
+        decoded["md5"] = hashlib.md5(body.encode("utf-8")).hexdigest()
+        entry["decoded"] = decoded
 
-    del entry['count']
+        del entry["count"]
 
-    # Found the final message in a group.
-    Queue.Queue.put(self, entry)
-    self.groups.pop(group_id)
+        # Found the final message in a group.
+        Queue.Queue.put(self, entry)
+        self.groups.pop(group_id)

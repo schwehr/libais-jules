@@ -181,366 +181,404 @@ MULTI_LINE_MESSAGES = """
 
 
 class UscgRegexTest(unittest.TestCase):
-
-  def testComplete(self):
-    # pylint: disable=line-too-long
-    line = '!AIVDM,1,1,,B,15N1R5PP00rlhF0GQ8M00?wL28KP,0*4F,d-117,S1760,t205246.00,T46.932137,r003669930,1429046147'
-    expected = {
-        'counter': None,
-        'hour': '20',
-        'minute': '52',
-        'payload': '!AIVDM,1,1,,B,15N1R5PP00rlhF0GQ8M00?wL28KP,0*4F',
-        'receiver_time': '205246.00',
-        'rssi': None,
-        'second': '46.00',
-        'signal_strength': '-117',
-        'slot': '1760',
-        'station': 'r003669930',
-        'station_type': 'r',
-        'time': '1429046147',
-        'time_of_arrival': '46.932137',
-        'uscg_metadata': ',d-117,S1760,t205246.00,T46.932137,r003669930,1429046147'}
-    self.assertEqual(uscg.USCG_RE.match(line).groupdict(), expected)
-
-  def testSlot(self):
-    # pylint: disable=line-too-long
-    line = '!SAVDM,1,1,7,B,18158j001ErSVGdE>>1Unlcp0l1n,0*44,d-105,S2235,t000059.00,T59.605270,D05MN-NC-MAMBS1,1428796799'
-    self.assertEqual(uscg.USCG_RE.match(line).groupdict()['slot'], '2235')
-
-  def testLowerRssi(self):
-    # pylint: disable=line-too-long
-    line = '!AIVDM,1,1,,A,177jR48P00JrdqBH@CwBcOw`08N`,0*7F,s27064,d-106,t000113.82,T28.09677041,S1053,r003669945,1136498115'
-    self.assertEqual(uscg.USCG_RE.match(line).groupdict()['rssi'], '27064')
-
-  def testLowerSignalStrength(self):
-    lines = (
+    def testComplete(self):
         # pylint: disable=line-too-long
-        '!SAVDM,1,1,3,B,D03Owh0m9N>4gPfGLfpNfp0,2*1D,d-9,S1500,t000440.00,T40.004650,D08MN-NO-VENBS1,1428797080',
-        '!AIVDM,1,1,,B,8h3OdJQKT001GNQTp2V8QeQgR;Rt00,4*31,d-089,S2243,t235959.00,T59.81635087,r09SIGN1,1428796801',
-        '!SAVDM,1,1,8,A,15NC6HPP00JRh42E3a`LK?wn2<13,0*5F,d-108,S2236,t000059.00,T59.631854,D05MN-NC-MAMBS1,1428796799',
+        line = "!AIVDM,1,1,,B,15N1R5PP00rlhF0GQ8M00?wL28KP,0*4F,d-117,S1760,t205246.00,T46.932137,r003669930,1429046147"
+        expected = {
+            "counter": None,
+            "hour": "20",
+            "minute": "52",
+            "payload": "!AIVDM,1,1,,B,15N1R5PP00rlhF0GQ8M00?wL28KP,0*4F",
+            "receiver_time": "205246.00",
+            "rssi": None,
+            "second": "46.00",
+            "signal_strength": "-117",
+            "slot": "1760",
+            "station": "r003669930",
+            "station_type": "r",
+            "time": "1429046147",
+            "time_of_arrival": "46.932137",
+            "uscg_metadata": ",d-117,S1760,t205246.00,T46.932137,r003669930,1429046147",
+        }
+        self.assertEqual(uscg.USCG_RE.match(line).groupdict(), expected)
+
+    def testSlot(self):
+        # pylint: disable=line-too-long
+        line = "!SAVDM,1,1,7,B,18158j001ErSVGdE>>1Unlcp0l1n,0*44,d-105,S2235,t000059.00,T59.605270,D05MN-NC-MAMBS1,1428796799"
+        self.assertEqual(uscg.USCG_RE.match(line).groupdict()["slot"], "2235")
+
+    def testLowerRssi(self):
+        # pylint: disable=line-too-long
+        line = "!AIVDM,1,1,,A,177jR48P00JrdqBH@CwBcOw`08N`,0*7F,s27064,d-106,t000113.82,T28.09677041,S1053,r003669945,1136498115"
+        self.assertEqual(uscg.USCG_RE.match(line).groupdict()["rssi"], "27064")
+
+    def testLowerSignalStrength(self):
+        lines = (
+            # pylint: disable=line-too-long
+            "!SAVDM,1,1,3,B,D03Owh0m9N>4gPfGLfpNfp0,2*1D,d-9,S1500,t000440.00,T40.004650,D08MN-NO-VENBS1,1428797080",
+            "!AIVDM,1,1,,B,8h3OdJQKT001GNQTp2V8QeQgR;Rt00,4*31,d-089,S2243,t235959.00,T59.81635087,r09SIGN1,1428796801",
+            "!SAVDM,1,1,8,A,15NC6HPP00JRh42E3a`LK?wn2<13,0*5F,d-108,S2236,t000059.00,T59.631854,D05MN-NC-MAMBS1,1428796799",
         )
-    self.assertEqual(
-        uscg.USCG_RE.match(lines[0]).groupdict()['signal_strength'], '-9')
-    self.assertEqual(
-        uscg.USCG_RE.match(lines[1]).groupdict()['signal_strength'], '-089')
-    self.assertEqual(
-        uscg.USCG_RE.match(lines[2]).groupdict()['signal_strength'], '-108')
+        self.assertEqual(
+            uscg.USCG_RE.match(lines[0]).groupdict()["signal_strength"], "-9"
+        )
+        self.assertEqual(
+            uscg.USCG_RE.match(lines[1]).groupdict()["signal_strength"], "-089"
+        )
+        self.assertEqual(
+            uscg.USCG_RE.match(lines[2]).groupdict()["signal_strength"], "-108"
+        )
 
-  def testReceiverTime(self):
-    # pylint: disable=line-too-long
-    line = '!SAVDM,1,1,9,A,15N4GOP000IS3iR@bPg:n`T00D3w,0*74,d-107,S2229,t235959.00,T59.445101,D08MN-NO-VENBS1,1428796799'
-    result = uscg.USCG_RE.match(line).groupdict()
-    self.assertEqual(result['receiver_time'], '235959.00')
-    self.assertEqual(result['hour'], '23')
-    self.assertEqual(result['minute'], '59')
-    self.assertEqual(result['second'], '59.00')
+    def testReceiverTime(self):
+        # pylint: disable=line-too-long
+        line = "!SAVDM,1,1,9,A,15N4GOP000IS3iR@bPg:n`T00D3w,0*74,d-107,S2229,t235959.00,T59.445101,D08MN-NO-VENBS1,1428796799"
+        result = uscg.USCG_RE.match(line).groupdict()
+        self.assertEqual(result["receiver_time"], "235959.00")
+        self.assertEqual(result["hour"], "23")
+        self.assertEqual(result["minute"], "59")
+        self.assertEqual(result["second"], "59.00")
 
-  def testTimeOfArrival(self):
-    # pylint: disable=line-too-long
-    line = '!SAVDM,1,1,8,A,15NC6HPP00JRh42E3a`LK?wn2<13,0*5F,d-108,S2236,t000059.00,T59.631854,D05MN-NC-MAMBS1,1428796799'
-    self.assertEqual(
-        uscg.USCG_RE.match(line).groupdict()['time_of_arrival'], '59.631854')
+    def testTimeOfArrival(self):
+        # pylint: disable=line-too-long
+        line = "!SAVDM,1,1,8,A,15NC6HPP00JRh42E3a`LK?wn2<13,0*5F,d-108,S2236,t000059.00,T59.631854,D05MN-NC-MAMBS1,1428796799"
+        self.assertEqual(
+            uscg.USCG_RE.match(line).groupdict()["time_of_arrival"], "59.631854"
+        )
 
-  def testStationCounter(self):
-    # pylint: disable=line-too-long
-    line = '!AIVDM,1,1,,A,KnLBOtVM4EWJbNH,2*27,s22613,d-125,T48.04022115,x4928,r003669946,1218999946'
-    self.assertEqual(uscg.USCG_RE.match(line).groupdict()['counter'], '4928')
+    def testStationCounter(self):
+        # pylint: disable=line-too-long
+        line = "!AIVDM,1,1,,A,KnLBOtVM4EWJbNH,2*27,s22613,d-125,T48.04022115,x4928,r003669946,1218999946"
+        self.assertEqual(uscg.USCG_RE.match(line).groupdict()["counter"], "4928")
 
-  def testStation(self):
-    # pylint: disable=line-too-long
-    line = '$GPTXT,01,01,02,ANTSTATUS=OK*3B,rnrwais1,1241447967.14'
-    self.assertEqual(
-        uscg.USCG_RE.match(line).groupdict()['station'], 'rnrwais1')
-    self.assertEqual(
-        uscg.USCG_RE.match(line).groupdict()['station_type'], 'r')
+    def testStation(self):
+        # pylint: disable=line-too-long
+        line = "$GPTXT,01,01,02,ANTSTATUS=OK*3B,rnrwais1,1241447967.14"
+        self.assertEqual(uscg.USCG_RE.match(line).groupdict()["station"], "rnrwais1")
+        self.assertEqual(uscg.USCG_RE.match(line).groupdict()["station_type"], "r")
 
-    line = '!AIVDM,1,1,,A,btKp7;kfb@J?rAvs,0*6B,s20552,d-123,T55.10376258,x373,R11SMOR1,1236152694'
-    self.assertEqual(
-        uscg.USCG_RE.match(line).groupdict()['station'], 'R11SMOR1')
+        line = "!AIVDM,1,1,,A,btKp7;kfb@J?rAvs,0*6B,s20552,d-123,T55.10376258,x373,R11SMOR1,1236152694"
+        self.assertEqual(uscg.USCG_RE.match(line).groupdict()["station"], "R11SMOR1")
 
-    line = '!BSVDO,1,1,,B,4h3OdJQuu5ossIw1T`JFhg700p00,0*44,b003665002,1428796801'
-    self.assertEqual(
-        uscg.USCG_RE.match(line).groupdict()['station'], 'b003665002')
+        line = "!BSVDO,1,1,,B,4h3OdJQuu5ossIw1T`JFhg700p00,0*44,b003665002,1428796801"
+        self.assertEqual(uscg.USCG_RE.match(line).groupdict()["station"], "b003665002")
 
-    line = '!AIVDM,3,3,4,A,PP3D<oPPEU;M418g@02PSpPPP2hlEoRQgU;j@17p@00,2*63,B0003160047,1064981014'
-    self.assertEqual(
-        uscg.USCG_RE.match(line).groupdict()['station'], 'B0003160047')
+        line = "!AIVDM,3,3,4,A,PP3D<oPPEU;M418g@02PSpPPP2hlEoRQgU;j@17p@00,2*63,B0003160047,1064981014"
+        self.assertEqual(uscg.USCG_RE.match(line).groupdict()["station"], "B0003160047")
 
-    line = '!SAVDM,2,2,1,A,KKKKKKKKKK@,2*4F,d-84,S1688,t000245.00,T45.018254,D08MN-NO-BSABS1,1428969765'
-    self.assertEqual(
-        uscg.USCG_RE.match(line).groupdict()['station'], 'D08MN-NO-BSABS1')
+        line = "!SAVDM,2,2,1,A,KKKKKKKKKK@,2*4F,d-84,S1688,t000245.00,T45.018254,D08MN-NO-BSABS1,1428969765"
+        self.assertEqual(
+            uscg.USCG_RE.match(line).groupdict()["station"], "D08MN-NO-BSABS1"
+        )
 
-  def testTime(self):
-    line = '!AIVDM,1,1,,B,:3TsvT2G`mGL,0*5A,r00370003,1428890499'
-    self.assertEqual(uscg.USCG_RE.match(line).groupdict()['time'], '1428890499')
-    line = '$GPTXT,01,01,02,ANTSTATUS=OK*3B,rnrwais1,1241447967.14'
-    self.assertEqual(
-        uscg.USCG_RE.match(line).groupdict()['time'], '1241447967.14')
+    def testTime(self):
+        line = "!AIVDM,1,1,,B,:3TsvT2G`mGL,0*5A,r00370003,1428890499"
+        self.assertEqual(uscg.USCG_RE.match(line).groupdict()["time"], "1428890499")
+        line = "$GPTXT,01,01,02,ANTSTATUS=OK*3B,rnrwais1,1241447967.14"
+        self.assertEqual(uscg.USCG_RE.match(line).groupdict()["time"], "1241447967.14")
 
 
 class ParseTest(unittest.TestCase):
+    def testSingleLine(self):
+        line = "!AIVDM,1,1,,B,=gLGu1tCm;vwvpwm,0*4C,r17MLAR1,1428885091"
+        metadata = uscg.Parse(line)
 
-  def testSingleLine(self):
-    line = '!AIVDM,1,1,,B,=gLGu1tCm;vwvpwm,0*4C,r17MLAR1,1428885091'
-    metadata = uscg.Parse(line)
-
-    self.assertEqual(
-        metadata['payload'], '!AIVDM,1,1,,B,=gLGu1tCm;vwvpwm,0*4C')
-    self.assertEqual(metadata['station'], 'r17MLAR1')
-    self.assertEqual(metadata['time'], 1428885091)
+        self.assertEqual(metadata["payload"], "!AIVDM,1,1,,B,=gLGu1tCm;vwvpwm,0*4C")
+        self.assertEqual(metadata["station"], "r17MLAR1")
+        self.assertEqual(metadata["time"], 1428885091)
 
 
 class DecodeMultipleTest(unittest.TestCase):
+    def test_decode_multiple_success(self):
+        # Valid two-line message split across two payloads.
+        # We construct a mock "message" dict as passed to uscg.DecodeMultiple.
+        message = {
+            "matches": [
+                {
+                    "payload": "!SAVDM,2,1,2,A,55@=M<02=rO7<Dm7B20EHE:1<4HEAV2222222217JQHQ:57c0Rk3lp0CQiC1,0*47"
+                },
+                {"payload": "!SAVDM,2,2,2,A,Dp888888880,2*08"},
+            ]
+        }
 
-  def test_decode_multiple_success(self):
-    # Valid two-line message split across two payloads.
-    # We construct a mock "message" dict as passed to uscg.DecodeMultiple.
-    message = {
-        'matches': [
-            {'payload': '!SAVDM,2,1,2,A,55@=M<02=rO7<Dm7B20EHE:1<4HEAV2222222217JQHQ:57c0Rk3lp0CQiC1,0*47'},
-            {'payload': '!SAVDM,2,2,2,A,Dp888888880,2*08'}
-        ]
-    }
+        decoded = uscg.DecodeMultiple(message)
+        self.assertIsNotNone(decoded)
+        self.assertEqual(decoded["id"], 5)
+        self.assertEqual(decoded["imo_num"], 9300465)
+        self.assertEqual(decoded["mmsi"], 352542000)
+        self.assertEqual(decoded["name"], "EVER SAFETY         ")
 
-    decoded = uscg.DecodeMultiple(message)
-    self.assertIsNotNone(decoded)
-    self.assertEqual(decoded['id'], 5)
-    self.assertEqual(decoded['imo_num'], 9300465)
-    self.assertEqual(decoded['mmsi'], 352542000)
-    self.assertEqual(decoded['name'], 'EVER SAFETY         ')
+    def test_decode_multiple_error(self):
+        # Error case: Provide only the first line of a two-line message.
+        # The queue won't be able to decode it into exactly one message, thus q.qsize() == 0.
+        message = {
+            "matches": [
+                {
+                    "payload": "!SAVDM,2,1,2,A,55@=M<02=rO7<Dm7B20EHE:1<4HEAV2222222217JQHQ:57c0Rk3lp0CQiC1,0*47"
+                }
+            ]
+        }
 
-  def test_decode_multiple_error(self):
-    # Error case: Provide only the first line of a two-line message.
-    # The queue won't be able to decode it into exactly one message, thus q.qsize() == 0.
-    message = {
-        'matches': [
-            {'payload': '!SAVDM,2,1,2,A,55@=M<02=rO7<Dm7B20EHE:1<4HEAV2222222217JQHQ:57c0Rk3lp0CQiC1,0*47'}
-        ]
-    }
-
-    decoded = uscg.DecodeMultiple(message)
-    self.assertIsNone(decoded)
+        decoded = uscg.DecodeMultiple(message)
+        self.assertIsNone(decoded)
 
 
 class UsgsQueueTest(unittest.TestCase):
+    def setUp(self):
+        self.queue = uscg.UscgQueue()
 
-  def setUp(self):
-    self.queue = uscg.UscgQueue()
+    def testPassThroughText(self):
+        lines = (
+            "",
+            "\n",
+            " \n",
+            " \n\r",
+            "# comment",
+            "$GPZDA,050004,29,11,2012,-5,00*",  # No checksum.
+            "GPZDA,050013,29,11,2012,-5,00*5D",  # No initial [$!].
+        )
+        for line_num, line in enumerate(lines):
+            self.queue.put(line)
+            self.assertEqual(self.queue.qsize(), 1)
+            expected = {"line_nums": [line_num + 1], "lines": [line.rstrip()]}
+            msg = self.queue.get()
+            self.assertEqual(
+                msg,
+                expected,
+                'pass through fail. %d "%s"\n  %s != %s'
+                % (line_num, line, msg, expected),
+            )
+            self.assertEqual(self.queue.qsize(), 0)
 
-  def testPassThroughText(self):
-    lines = (
-        '',
-        '\n',
-        ' \n',
-        ' \n\r',
-        '# comment',
-        '$GPZDA,050004,29,11,2012,-5,00*',  # No checksum.
-        'GPZDA,050013,29,11,2012,-5,00*5D',  # No initial [$!].
-    )
-    for line_num, line in enumerate(lines):
-      self.queue.put(line)
-      self.assertEqual(self.queue.qsize(), 1)
-      expected = {
-          'line_nums': [line_num + 1],
-          'lines': [line.rstrip()]}
-      msg = self.queue.get()
-      self.assertEqual(msg, expected, 'pass through fail. %d "%s"\n  %s != %s'
-                       % (line_num, line, msg, expected))
-      self.assertEqual(self.queue.qsize(), 0)
-
-  def testSingleLine(self):
-    # pylint: disable=line-too-long
-    line = '!SAVDM,1,1,7,B,18158j001ErSVGdE>>1Unlcp0l1n,0*44,d-105,S2235,t000059.00,T59.605270,D05MN-NC-MAMBS1,1428796799'
-    # self.assertEqual(ais.decode('18158j001ErSVGdE>>1Unlcp0l1n'), {})
-    metadata = uscg.Parse(line)
-    self.assertEqual(
-        metadata,
-        {
-            'counter': None,
-            'hour': 0,
-            'minute': 0,
-            'payload': '!SAVDM,1,1,7,B,18158j001ErSVGdE>>1Unlcp0l1n,0*44',
-            'receiver_time': 59.00,
-            'rssi': None,
-            'second': 59.00,
-            'signal_strength': -105,
-            'slot': 2235,
-            'station': 'D05MN-NC-MAMBS1',
-            'station_type': 'D',
-            'time': 1428796799,
-            'time_of_arrival': 59.605270,
-            'uscg_metadata':
-            ',d-105,S2235,t000059.00,T59.605270,D05MN-NC-MAMBS1,1428796799'})
-
-  def testSingleLineDecode(self):
-    line = '!SAVDM,1,1,,B,K8VSqb9LdU28WP8<,0*17,rMySat,1218999946'
-
-    self.queue.put(line)
-    self.assertEqual(self.queue.qsize(), 1)
-    msg = self.queue.get()
-    self.assertEqual(
-        msg,
-        {
-            'decoded': {
-                'cog': 131,
-                'gnss': True,
-                'id': 27,
-                'md5': '50898a3435865cf76f1b502b2821672b',
-                'mmsi': 577305000,
-                'nav_status': 5,
-                'position_accuracy': 1,
-                'raim': False,
-                'repeat_indicator': 0,
-                'sog': 0,
-                'spare': 0,
-                'x': -90.20666666666666,
-                'y': 29.145},
-            'line_nums': [None],
-            'lines': ['!SAVDM,1,1,,B,K8VSqb9LdU28WP8<,0*17,rMySat,1218999946'],
-            'matches': [{
-                'body': 'K8VSqb9LdU28WP8<',
-                'chan': 'B',
-                'checksum': '17',
-                'counter': None,
-                'fill_bits': 0,
-                'hour': None,
-                'minute': None,
-                'payload': '!SAVDM,1,1,,B,K8VSqb9LdU28WP8<,0*17',
-                'receiver_time': None,
-                'rssi': None,
-                'second': None,
-                'sen_num': 1,
-                'sen_tot': 1,
-                'seq_id': None,
-                'signal_strength': None,
-                'slot': None,
-                'station': 'rMySat',
-                'station_type': 'r',
-                'talker': 'SA',
-                'time': 1218999946,
-                'time_of_arrival': None,
-                'uscg_metadata': ',rMySat,1218999946',
-                'vdm': '!SAVDM,1,1,,B,K8VSqb9LdU28WP8<,0*17',
-                'vdm_type': 'VDM'}]})
-
-  def testManySingleLineMessages(self):
-    count = 0
-    for line in SINGLE_LINE_MESSAGES.split('\n'):
-      if not line.startswith('!'):
-        continue
-      count += 1
-      self.queue.put(line)
-      self.assertEqual(self.queue.qsize(), count, 'line failed: %s' % line)
-
-    msgs = []
-    while not self.queue.empty():
-      msg = self.queue.get()
-      msgs.append(msg)
-      self.assertIn('decoded', msg)
-      self.assertIn('line_nums', msg)
-      self.assertIn('lines', msg)
-      self.assertIn('matches', msg)
-
-    msg_ids = [msg['decoded']['id'] for msg in msgs]
-    self.assertEqual(
-        msg_ids,
-        [1, 4, 2, 3, 4, 7, 10, 12, 12, 14, 15, 16, 18, 20, 21, 22, 23, 24, 25,
-         26, 27])
-
-  def testOneMultiLineMessage(self):
-    lines = (
+    def testSingleLine(self):
         # pylint: disable=line-too-long
-        '!SAVDM,2,1,2,A,55@=M<02=rO7<Dm7B20EHE:1<4HEAV2222222217JQHQ:57c0Rk3lp0CQiC1,0*47,d-62,S2149,t135257.00,T57.311866,D11MN-LA-CATBS1,1429278777',
-        '!SAVDM,2,2,2,A,Dp888888880,2*08,d-62,S2149,t135257.00,T57.311866,D11MN-LA-CATBS1,1429278777'
-    )
-    self.queue.put(lines[0])
-    self.assertEqual(self.queue.qsize(), 0)
-    self.queue.put(lines[1])
-    self.assertEqual(self.queue.qsize(), 1)
-    msg = self.queue.get()
-    self.assertEqual(
-        msg,
-        {
-            # pylint: disable=line-too-long
-            'decoded': {
-                'ais_version': 0,
-                'callsign': '3EMQ4  ',
-                'destination': 'LOS ANGELES         ',
-                'dim_a': 212,
-                'dim_b': 88,
-                'dim_c': 33,
-                'dim_d': 10,
-                'draught': 13.899999618530273,
-                'dte': 0,
-                'eta_day': 15,
-                'eta_hour': 11,
-                'eta_minute': 0,
-                'eta_month': 4,
-                'fix_type': 1,
-                'id': 5,
-                'imo_num': 9300465,
-                'md5': '3ce09e77864abc4b9766573e1de13c3c',
-                'mmsi': 352542000,
-                'name': 'EVER SAFETY         ',
-                'repeat_indicator': 0,
-                'spare': 0,
-                'type_and_cargo': 71},
-            'line_nums': [1, 2],
-            'lines': [
-                '!SAVDM,2,1,2,A,55@=M<02=rO7<Dm7B20EHE:1<4HEAV2222222217JQHQ:57c0Rk3lp0CQiC1,0*47,d-62,S2149,t135257.00,T57.311866,D11MN-LA-CATBS1,1429278777',
-                '!SAVDM,2,2,2,A,Dp888888880,2*08,d-62,S2149,t135257.00,T57.311866,D11MN-LA-CATBS1,1429278777'],
-            'matches': [
-                {
-                    'body': '55@=M<02=rO7<Dm7B20EHE:1<4HEAV2222222217JQHQ:57c0Rk3lp0CQiC1',
-                    'chan': 'A',
-                    'checksum': '47',
-                    'counter': None,
-                    'fill_bits': 0,
-                    'hour': 13,
-                    'minute': 52,
-                    'payload': '!SAVDM,2,1,2,A,55@=M<02=rO7<Dm7B20EHE:1<4HEAV2222222217JQHQ:57c0Rk3lp0CQiC1,0*47',
-                    'receiver_time': 135257.00,
-                    'rssi': None,
-                    'second': 57.0,
-                    'sen_num': 1,
-                    'sen_tot': 2,
-                    'seq_id': 2,
-                    'signal_strength': -62,
-                    'slot': 2149,
-                    'station': 'D11MN-LA-CATBS1',
-                    'station_type': 'D',
-                    'talker': 'SA',
-                    'time': 1429278777,
-                    'time_of_arrival': 57.311866,
-                    'uscg_metadata': ',d-62,S2149,t135257.00,T57.311866,D11MN-LA-CATBS1,1429278777',
-                    'vdm': '!SAVDM,2,1,2,A,55@=M<02=rO7<Dm7B20EHE:1<4HEAV2222222217JQHQ:57c0Rk3lp0CQiC1,0*47',
-                    'vdm_type': 'VDM'},
-                {
-                    'body': 'Dp888888880',
-                    'chan': 'A',
-                    'checksum': '08',
-                    'counter': None,
-                    'fill_bits': 2,
-                    'hour': 13,
-                    'minute': 52,
-                    'payload': '!SAVDM,2,2,2,A,Dp888888880,2*08',
-                    'receiver_time': 135257.00,
-                    'rssi': None,
-                    'second': 57.00,
-                    'sen_num': 2,
-                    'sen_tot': 2,
-                    'seq_id': 2,
-                    'signal_strength': -62,
-                    'slot': 2149,
-                    'station': 'D11MN-LA-CATBS1',
-                    'station_type': 'D',
-                    'talker': 'SA',
-                    'time': 1429278777,
-                    'time_of_arrival': 57.311866,
-                    'uscg_metadata': ',d-62,S2149,t135257.00,T57.311866,D11MN-LA-CATBS1,1429278777',
-                    'vdm': '!SAVDM,2,2,2,A,Dp888888880,2*08',
-                    'vdm_type': 'VDM'}],
-            'times': [1429278777, 1429278777]})
+        line = "!SAVDM,1,1,7,B,18158j001ErSVGdE>>1Unlcp0l1n,0*44,d-105,S2235,t000059.00,T59.605270,D05MN-NC-MAMBS1,1428796799"
+        # self.assertEqual(ais.decode('18158j001ErSVGdE>>1Unlcp0l1n'), {})
+        metadata = uscg.Parse(line)
+        self.assertEqual(
+            metadata,
+            {
+                "counter": None,
+                "hour": 0,
+                "minute": 0,
+                "payload": "!SAVDM,1,1,7,B,18158j001ErSVGdE>>1Unlcp0l1n,0*44",
+                "receiver_time": 59.00,
+                "rssi": None,
+                "second": 59.00,
+                "signal_strength": -105,
+                "slot": 2235,
+                "station": "D05MN-NC-MAMBS1",
+                "station_type": "D",
+                "time": 1428796799,
+                "time_of_arrival": 59.605270,
+                "uscg_metadata": ",d-105,S2235,t000059.00,T59.605270,D05MN-NC-MAMBS1,1428796799",
+            },
+        )
 
-if __name__ == '__main__':
-  unittest.main()
+    def testSingleLineDecode(self):
+        line = "!SAVDM,1,1,,B,K8VSqb9LdU28WP8<,0*17,rMySat,1218999946"
+
+        self.queue.put(line)
+        self.assertEqual(self.queue.qsize(), 1)
+        msg = self.queue.get()
+        self.assertEqual(
+            msg,
+            {
+                "decoded": {
+                    "cog": 131,
+                    "gnss": True,
+                    "id": 27,
+                    "md5": "50898a3435865cf76f1b502b2821672b",
+                    "mmsi": 577305000,
+                    "nav_status": 5,
+                    "position_accuracy": 1,
+                    "raim": False,
+                    "repeat_indicator": 0,
+                    "sog": 0,
+                    "spare": 0,
+                    "x": -90.20666666666666,
+                    "y": 29.145,
+                },
+                "line_nums": [None],
+                "lines": ["!SAVDM,1,1,,B,K8VSqb9LdU28WP8<,0*17,rMySat,1218999946"],
+                "matches": [
+                    {
+                        "body": "K8VSqb9LdU28WP8<",
+                        "chan": "B",
+                        "checksum": "17",
+                        "counter": None,
+                        "fill_bits": 0,
+                        "hour": None,
+                        "minute": None,
+                        "payload": "!SAVDM,1,1,,B,K8VSqb9LdU28WP8<,0*17",
+                        "receiver_time": None,
+                        "rssi": None,
+                        "second": None,
+                        "sen_num": 1,
+                        "sen_tot": 1,
+                        "seq_id": None,
+                        "signal_strength": None,
+                        "slot": None,
+                        "station": "rMySat",
+                        "station_type": "r",
+                        "talker": "SA",
+                        "time": 1218999946,
+                        "time_of_arrival": None,
+                        "uscg_metadata": ",rMySat,1218999946",
+                        "vdm": "!SAVDM,1,1,,B,K8VSqb9LdU28WP8<,0*17",
+                        "vdm_type": "VDM",
+                    }
+                ],
+            },
+        )
+
+    def testManySingleLineMessages(self):
+        count = 0
+        for line in SINGLE_LINE_MESSAGES.split("\n"):
+            if not line.startswith("!"):
+                continue
+            count += 1
+            self.queue.put(line)
+            self.assertEqual(self.queue.qsize(), count, "line failed: %s" % line)
+
+        msgs = []
+        while not self.queue.empty():
+            msg = self.queue.get()
+            msgs.append(msg)
+            self.assertIn("decoded", msg)
+            self.assertIn("line_nums", msg)
+            self.assertIn("lines", msg)
+            self.assertIn("matches", msg)
+
+        msg_ids = [msg["decoded"]["id"] for msg in msgs]
+        self.assertEqual(
+            msg_ids,
+            [
+                1,
+                4,
+                2,
+                3,
+                4,
+                7,
+                10,
+                12,
+                12,
+                14,
+                15,
+                16,
+                18,
+                20,
+                21,
+                22,
+                23,
+                24,
+                25,
+                26,
+                27,
+            ],
+        )
+
+    def testOneMultiLineMessage(self):
+        lines = (
+            # pylint: disable=line-too-long
+            "!SAVDM,2,1,2,A,55@=M<02=rO7<Dm7B20EHE:1<4HEAV2222222217JQHQ:57c0Rk3lp0CQiC1,0*47,d-62,S2149,t135257.00,T57.311866,D11MN-LA-CATBS1,1429278777",
+            "!SAVDM,2,2,2,A,Dp888888880,2*08,d-62,S2149,t135257.00,T57.311866,D11MN-LA-CATBS1,1429278777",
+        )
+        self.queue.put(lines[0])
+        self.assertEqual(self.queue.qsize(), 0)
+        self.queue.put(lines[1])
+        self.assertEqual(self.queue.qsize(), 1)
+        msg = self.queue.get()
+        self.assertEqual(
+            msg,
+            {
+                # pylint: disable=line-too-long
+                "decoded": {
+                    "ais_version": 0,
+                    "callsign": "3EMQ4  ",
+                    "destination": "LOS ANGELES         ",
+                    "dim_a": 212,
+                    "dim_b": 88,
+                    "dim_c": 33,
+                    "dim_d": 10,
+                    "draught": 13.899999618530273,
+                    "dte": 0,
+                    "eta_day": 15,
+                    "eta_hour": 11,
+                    "eta_minute": 0,
+                    "eta_month": 4,
+                    "fix_type": 1,
+                    "id": 5,
+                    "imo_num": 9300465,
+                    "md5": "3ce09e77864abc4b9766573e1de13c3c",
+                    "mmsi": 352542000,
+                    "name": "EVER SAFETY         ",
+                    "repeat_indicator": 0,
+                    "spare": 0,
+                    "type_and_cargo": 71,
+                },
+                "line_nums": [1, 2],
+                "lines": [
+                    "!SAVDM,2,1,2,A,55@=M<02=rO7<Dm7B20EHE:1<4HEAV2222222217JQHQ:57c0Rk3lp0CQiC1,0*47,d-62,S2149,t135257.00,T57.311866,D11MN-LA-CATBS1,1429278777",
+                    "!SAVDM,2,2,2,A,Dp888888880,2*08,d-62,S2149,t135257.00,T57.311866,D11MN-LA-CATBS1,1429278777",
+                ],
+                "matches": [
+                    {
+                        "body": "55@=M<02=rO7<Dm7B20EHE:1<4HEAV2222222217JQHQ:57c0Rk3lp0CQiC1",
+                        "chan": "A",
+                        "checksum": "47",
+                        "counter": None,
+                        "fill_bits": 0,
+                        "hour": 13,
+                        "minute": 52,
+                        "payload": "!SAVDM,2,1,2,A,55@=M<02=rO7<Dm7B20EHE:1<4HEAV2222222217JQHQ:57c0Rk3lp0CQiC1,0*47",
+                        "receiver_time": 135257.00,
+                        "rssi": None,
+                        "second": 57.0,
+                        "sen_num": 1,
+                        "sen_tot": 2,
+                        "seq_id": 2,
+                        "signal_strength": -62,
+                        "slot": 2149,
+                        "station": "D11MN-LA-CATBS1",
+                        "station_type": "D",
+                        "talker": "SA",
+                        "time": 1429278777,
+                        "time_of_arrival": 57.311866,
+                        "uscg_metadata": ",d-62,S2149,t135257.00,T57.311866,D11MN-LA-CATBS1,1429278777",
+                        "vdm": "!SAVDM,2,1,2,A,55@=M<02=rO7<Dm7B20EHE:1<4HEAV2222222217JQHQ:57c0Rk3lp0CQiC1,0*47",
+                        "vdm_type": "VDM",
+                    },
+                    {
+                        "body": "Dp888888880",
+                        "chan": "A",
+                        "checksum": "08",
+                        "counter": None,
+                        "fill_bits": 2,
+                        "hour": 13,
+                        "minute": 52,
+                        "payload": "!SAVDM,2,2,2,A,Dp888888880,2*08",
+                        "receiver_time": 135257.00,
+                        "rssi": None,
+                        "second": 57.00,
+                        "sen_num": 2,
+                        "sen_tot": 2,
+                        "seq_id": 2,
+                        "signal_strength": -62,
+                        "slot": 2149,
+                        "station": "D11MN-LA-CATBS1",
+                        "station_type": "D",
+                        "talker": "SA",
+                        "time": 1429278777,
+                        "time_of_arrival": 57.311866,
+                        "uscg_metadata": ",d-62,S2149,t135257.00,T57.311866,D11MN-LA-CATBS1,1429278777",
+                        "vdm": "!SAVDM,2,2,2,A,Dp888888880,2*08",
+                        "vdm_type": "VDM",
+                    },
+                ],
+                "times": [1429278777, 1429278777],
+            },
+        )
+
+
+if __name__ == "__main__":
+    unittest.main()

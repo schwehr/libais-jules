@@ -1,8 +1,6 @@
 """Utilities for working with NMEA strings."""
 
 import re
-import sys
-import time
 
 nmeaChecksumRegExStr = r"""\,[0-9]\*[0-9A-F][0-9A-F]"""
 nmeaChecksumRE = re.compile(nmeaChecksumRegExStr)
@@ -24,14 +22,17 @@ def checksumStr(data: str) -> str:
     """
 
     # FIX: strip off new line at the end too
-    data = data.rstrip('\r\n')
-    if data[0]=='!' or data[0]=='?': data = data[1:]
-    if data[-1]=='*': data = data[:-1]
-    if data[-3]=='*': data = data[:-3]
+    data = data.rstrip("\r\n")
+    if data[0] == "!" or data[0] == "?":
+        data = data[1:]
+    if data[-1] == "*":
+        data = data[:-1]
+    if data[-3] == "*":
+        data = data[:-3]
     # FIX: rename sum to not shadow builtin function
     checksum = 0
     for c in data:
-      checksum = checksum ^ ord(c)
+        checksum = checksum ^ ord(c)
     return "%02X" % checksum
 
 
@@ -57,11 +58,11 @@ def isChecksumValid(nmeaStr: str, allowTailData: bool = True) -> bool:
         match = nmeaChecksumRE.search(nmeaStr)
         if not match:
             return False
-        nmeaStr = nmeaStr[:match.end()]
+        nmeaStr = nmeaStr[: match.end()]
 
-    if nmeaStr[-3]!='*':
+    if nmeaStr[-3] != "*":
         return False  # Bad string without proper checksum.
-    checksum=nmeaStr[-2:]
+    checksum = nmeaStr[-2:]
     if checksum.upper() == checksumStr(nmeaStr).upper():
         return True
     return False
