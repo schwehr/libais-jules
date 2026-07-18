@@ -6,6 +6,7 @@ import collections
 import logging
 import pprint
 import sys
+from typing import Any, Iterable, Optional, Counter as TypingCounter
 
 from ais import nmea_queue
 
@@ -14,37 +15,37 @@ logger = logging.getLogger('libais')
 
 class TrackRange:
 
-  def __init__(self):
-    self.min = None
-    self.max = None
+  def __init__(self) -> None:
+    self.min: Optional[float] = None
+    self.max: Optional[float] = None
 
-  def AddValues(self, *values):
-    values = [v for v in values if v is not None]
-    if not len(values):
+  def AddValues(self, *values: Any) -> None:
+    valid_values = [v for v in values if v is not None]
+    if not len(valid_values):
       raise ValueError('Must specify at least 1 value.')
     if self.min is None:
-      self.min = min(values)
-      self.max = max(values)
+      self.min = min(valid_values)
+      self.max = max(valid_values)
       return
-    self.min = min(self.min, *values)
-    self.max = max(self.max, *values)
+    self.min = min(self.min, *valid_values)
+    self.max = max(self.max, *valid_values)
 
 
 class Stats:
 
-  def __init__(self):
-    self.counts = collections.Counter()
+  def __init__(self) -> None:
+    self.counts: TypingCounter[str] = collections.Counter()
     self.queue = nmea_queue.NmeaQueue()
     self.time_range = TrackRange()
     self.time_delta_range = TrackRange()
 
-  def AddFile(self, iterable, filename=None):
+  def AddFile(self, iterable: Iterable[str], filename: Optional[str] = None) -> None:
     self.counts['files'] += 1
 
     for line in iterable:
       self.AddLine(line)
 
-  def AddLine(self, line):
+  def AddLine(self, line: str) -> None:
     self.counts['lines'] += 1
     self.queue.put(line)
     msg = self.queue.GetOrNone()
@@ -70,15 +71,17 @@ class Stats:
           self.time_range.AddValues(*times)
 
 
-  def PrintSummary(self):
+  def PrintSummary(self) -> None:
     pprint.pprint(self.counts)
 
     logger.info('time_range: [%s to %s]',
                  self.time_range.min,
                  self.time_range.max)
 
-    logger.info('%s', datetime.datetime.utcfromtimestamp(self.time_range.min))
-    logger.info('%s', datetime.datetime.utcfromtimestamp(self.time_range.max))
+    if self.time_range.min is not None:
+      logger.info('%s', datetime.datetime.utcfromtimestamp(self.time_range.min))
+    if self.time_range.max is not None:
+      logger.info('%s', datetime.datetime.utcfromtimestamp(self.time_range.max))
 
     logger.info('time_delta_range: [%s to %s]',
                  self.time_delta_range.min,
@@ -86,7 +89,7 @@ class Stats:
 
 
 
-def main():
+def main() -> None:
   logger.setLevel(logging.INFO)
   logger.info('in main')
 
