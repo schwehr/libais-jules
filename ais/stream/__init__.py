@@ -3,6 +3,7 @@
 import sys
 import traceback
 import warnings
+from typing import Any, Callable, Iterable, Iterator
 
 import ais
 from ais.stream import checksum
@@ -14,11 +15,11 @@ warnings.warn(
 )
 
 
-def ErrorPrinter(e,
-                 stats,
-                 verbose=False,
-                 max_errors=None, # In % of total number of input lines
-                 **kw):
+def ErrorPrinter(e: Exception,
+                 stats: dict[str, Any],
+                 verbose: bool = False,
+                 max_errors: float | None = None, # In % of total number of input lines
+                 **kw: Any) -> None:
   if max_errors != None and float(stats["error_num_total"]) / float(stats["line_num"]) * 100.0 > max_errors:
     raise TooManyErrorsError(**stats)
   if verbose:
@@ -29,11 +30,11 @@ class StreamError(Exception):
 
   description = 'Stream error'
 
-  def __init__(self, **kw):
+  def __init__(self, **kw: Any) -> None:
     self.kw = kw
     self.kw['description'] = self.description
 
-  def __str__(self):
+  def __str__(self) -> str:
     return '%(description)s: %(line_num)s: %(line)s' % self.kw
 
 
@@ -52,39 +53,39 @@ class NoStationFoundError(StreamError):
 class TooFewFieldsError(StreamError):
   description = 'Too few fields'
 
-  def __str__(self):
+  def __str__(self) -> str:
     return '%(description)s, got %(fields)s but needed 6: %(line_num)s: %(line)s' % self.kw
 
 
 class MissingTimestampsError(StreamError):
   description = 'Timestamps missing'
 
-  def __str__(self):
+  def __str__(self) -> str:
     return '%(description)s: %(line_num)s: %(line)s, parts: %(parts)s' % self.kw
 
 class DifferingTimestampsError(StreamError):
   description = 'Timestamps not all the same'
 
-  def __str__(self):
+  def __str__(self) -> str:
     return '%(description)s for %(timestamp)s: %(line_num)s: %(line)s, parts: %(parts)s' % self.kw
 
 class OnlyMessageEndError(StreamError):
   description = 'Do not have the preceding packets for'
 
-  def __str__(self):
+  def __str__(self) -> str:
     return '%(description)s for %(bufferSlot)s:\n%(line)s\n' % self.kw
 
 class UnfinishedMessagesError(StreamError):
   description = 'Unfinished messages at end of file'
 
-  def __str__(self):
+  def __str__(self) -> str:
     return '%(description)s:\n%(buffers)s\n' % self.kw
 
 
 class TooManyErrorsError(StreamError):
   description = 'Too many errors'
 
-  def __str__(self):
+  def __str__(self) -> str:
     res = dict(self.kw)
     res['error_lines'] = ""
     if 'error_num' in res:
@@ -92,7 +93,7 @@ class TooManyErrorsError(StreamError):
     return '%(description)s: %(error_num_total)s errors in %(line_num)s lines:%(error_lines)s' % res
 
 
-def parseTagBlock(line):
+def parseTagBlock(line: str) -> tuple[dict[str, Any], str]:
   if not line.startswith("\\"):
     return {}, line
   tagblock, line = line[1:].split("\\", 1)
@@ -129,7 +130,7 @@ def parseTagBlock(line):
   return tags, line
 
 
-def add_error_to_stats(e, stats):
+def add_error_to_stats(e: Exception, stats: dict[str, Any]) -> None:
   if "error_num_total" not in stats:
     stats["error_num_total"] = 0
   stats["error_num_total"] += 1
@@ -141,18 +142,18 @@ def add_error_to_stats(e, stats):
   stats["error_num"][name] += 1
 
 
-def normalize(nmea=sys.stdin,
-              uscg=True,
-              validate_checksum=True,
-              allow_unknown=False,
-              window=2,
-              ignore_tagblock_station=False,
-              treat_ab_equal=False,
-              pass_invalid_checksums=False,
-              allow_missing_timestamps=False,
-              errorcb=ErrorPrinter,
-              stats=None,
-              **kw):
+def normalize(nmea: Iterable[str] = sys.stdin,
+              uscg: bool = True,
+              validate_checksum: bool = True,
+              allow_unknown: bool = False,
+              window: int = 2,
+              ignore_tagblock_station: bool = False,
+              treat_ab_equal: bool = False,
+              pass_invalid_checksums: bool = False,
+              allow_missing_timestamps: bool = False,
+              errorcb: Callable[..., None] = ErrorPrinter,
+              stats: dict[str, Any] | None = None,
+              **kw: Any) -> Iterator[tuple[dict[str, Any], str, str]]:
   """Assemble multi-line messages
 
   Args:
@@ -316,11 +317,11 @@ def normalize(nmea=sys.stdin,
     report_error(UnfinishedMessagesError(buffers=buffers))
 
 
-def decode(nmea=sys.stdin,
-           errorcb=ErrorPrinter,
-           keep_nmea=False,
-           stats=None,
-           **kw):
+def decode(nmea: Iterable[str] = sys.stdin,
+           errorcb: Callable[..., None] = ErrorPrinter,
+           keep_nmea: bool = False,
+           stats: dict[str, Any] | None = None,
+           **kw: Any) -> Iterator[dict[str, Any]]:
   """Decodes a stream of AIS messages. Takes the same arguments as normalize."""
 
   if stats is None: stats={}
