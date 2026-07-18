@@ -45,7 +45,7 @@ version = {attr = "ais.__version__"}
 readme = {file = ["README.rst"]}
 
 [tool.setuptools]
-script-files = ["bin/aisdecode"]
+script-files = ["bin/aisdecode.py"]
 platforms = ["POSIX"]
 
 [tool.setuptools.packages.find]
