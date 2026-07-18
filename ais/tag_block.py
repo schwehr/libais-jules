@@ -101,7 +101,7 @@ class TagQueue(Queue.Queue):
     self.line_num: int = 0
     Queue.Queue.__init__(self)
 
-  def put(self, line: str, line_num: int | None = None) -> None:
+  def put(self, line: str, line_num: int | None = None):
     if line_num is not None:
       self.line_num = line_num
     else:
