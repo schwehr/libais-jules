@@ -6,7 +6,7 @@ import collections
 import logging
 import pprint
 import sys
-from typing import Any, Iterable, Optional, Counter as TypingCounter
+from typing import Any, Iterable, Counter as TypingCounter
 
 from ais import nmea_queue
 
@@ -16,8 +16,8 @@ logger = logging.getLogger('libais')
 class TrackRange:
 
   def __init__(self) -> None:
-    self.min: Optional[float] = None
-    self.max: Optional[float] = None
+    self.min: float | None = None
+    self.max: float | None = None
 
   def AddValues(self, *values: Any) -> None:
     valid_values = [v for v in values if v is not None]
@@ -39,7 +39,7 @@ class Stats:
     self.time_range = TrackRange()
     self.time_delta_range = TrackRange()
 
-  def AddFile(self, iterable: Iterable[str], filename: Optional[str] = None) -> None:
+  def AddFile(self, iterable: Iterable[str], filename: str | None = None) -> None:
     self.counts['files'] += 1
 
     for line in iterable:
