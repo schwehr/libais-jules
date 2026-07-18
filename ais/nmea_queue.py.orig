@@ -1,6 +1,5 @@
 """Manage a stream of NMEA messages with optional metadata."""
 import queue as Queue
-from typing import Any, Dict, Optional
 
 from ais import nmea
 from ais import tag_block
@@ -12,14 +11,14 @@ class Error(Exception):
   pass
 
 
-def GetOrNone(queue: Queue.Queue[Dict[str, Any]]) -> Optional[Dict[str, Any]]:
+def GetOrNone(queue):
   try:
     return queue.get(block=False)
   except Queue.Empty:
-    return None
+    return
 
 
-class NmeaQueue(Queue.Queue[Dict[str, Any]]):
+class NmeaQueue(Queue.Queue):
   # pylint: disable=line-too-long
   r"""Process mixed text, bare NMEA or NMEA with TAG BLOCK or USCG metadata.
 
@@ -102,14 +101,14 @@ class NmeaQueue(Queue.Queue[Dict[str, Any]]):
          'times': [1428884269]})
   """
 
-  def __init__(self) -> None:
+  def __init__(self):
     self.bare_queue = vdm.BareQueue()
     self.tagb_queue = tag_block.TagQueue()
     self.uscg_queue = uscg.UscgQueue()
     self.line_num = 0
     Queue.Queue.__init__(self)
 
-  def put(self, line: str, line_num: Optional[int] = None) -> None: # type: ignore[override]
+  def put(self, line, line_num=None):
     """Add a line to the queue.
 
     Args:
@@ -145,8 +144,8 @@ class NmeaQueue(Queue.Queue[Dict[str, Any]]):
       msg['line_type'] = line_type
       Queue.Queue.put(self, msg)
 
-  def GetOrNone(self) -> Optional[Dict[str, Any]]:
+  def GetOrNone(self):
     try:
       return self.get(block=False)
     except Queue.Empty:
-      return None
+      return

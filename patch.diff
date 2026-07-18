@@ -1,0 +1,9 @@
+--- ais/nmea_queue.py
++++ ais/nmea_queue.py
+@@ -1,6 +1,7 @@
+ """Manage a stream of NMEA messages with optional metadata."""
+ import queue as Queue
++from typing import Any, Dict, Optional
+
+ from ais import nmea
+ from ais import tag_block
