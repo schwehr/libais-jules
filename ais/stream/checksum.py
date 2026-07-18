@@ -8,7 +8,7 @@ nmeaChecksumRegExStr = r"""\,[0-9]\*[0-9A-F][0-9A-F]"""
 nmeaChecksumRE = re.compile(nmeaChecksumRegExStr)
 
 
-def checksumStr(data):
+def checksumStr(data: str) -> str:
     """Take a NMEA 0183 string and compute the checksum.
     @param data: NMEA message.  Leading ?/! and training checksum are optional
     @type data: str
@@ -35,7 +35,7 @@ def checksumStr(data):
     return "%02X" % checksum
 
 
-def isChecksumValid(nmeaStr, allowTailData=True):
+def isChecksumValid(nmeaStr: str, allowTailData: bool = True) -> bool:
     """Return True if the string checks out with the checksum.
 
     @param allowTailData: Permit handing of Coast Guard format with data after the checksum
