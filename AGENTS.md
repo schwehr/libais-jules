@@ -6,3 +6,4 @@ Welcome, Agent! Here are some important instructions for this repository:
 2. The Python library is built with C++ extensions using `setup.py`.
 3. Please ensure tests pass by running `python -m unittest discover -s test -p "*_test.py"` when modifying code.
 4. Python files are located in `ais/`, tests in `test/`, and C++ source in `src/`.
+5. When adding type annotations, `__init__` methods should never have a return type.

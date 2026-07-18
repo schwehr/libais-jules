@@ -15,6 +15,7 @@ import hashlib
 import logging
 import queue as Queue
 import re
+from typing import Any
 
 import ais
 from ais import nmea
@@ -55,7 +56,7 @@ NUMERIC_FIELDS = (
 )
 
 
-def Parse(data):
+def Parse(data: str | dict[str, Any]) -> dict[str, Any] | None:
   """Unpack a TAG Block line or return None.
 
   Makes sure that the line matches the regex and the checksum matches.
@@ -96,11 +97,11 @@ class TagQueue(Queue.Queue):
   """
 
   def __init__(self):
-    self.groups = {}
-    self.line_num = 0
+    self.groups: dict[int, dict[str, Any]] = {}
+    self.line_num: int = 0
     Queue.Queue.__init__(self)
 
-  def put(self, line, line_num=None):
+  def put(self, line: str, line_num: int | None = None):
     if line_num is not None:
       self.line_num = line_num
     else:
@@ -175,7 +176,7 @@ class TagQueue(Queue.Queue):
     self.groups.pop(group_id)
 
 
-def DecodeTagSingle(tag_block_message):
+def DecodeTagSingle(tag_block_message: dict[str, Any]) -> dict[str, Any] | None:
   """Decode the payload of one (but NOT more) NMEA TAG block.
 
   Args:
@@ -208,7 +209,7 @@ def DecodeTagSingle(tag_block_message):
   return decoded
 
 
-def DecodeTagMultiple(tag_block_message):
+def DecodeTagMultiple(tag_block_message: dict[str, Any]) -> dict[str, Any] | None:
   """Decode a TAG block message that spans multiple lines."""
   payloads = [msg['payload'] for msg in tag_block_message['matches']]
 
