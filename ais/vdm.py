@@ -62,7 +62,7 @@ import hashlib
 import logging
 import queue as Queue
 import re
-from typing import Any, Dict, Iterable, Iterator, Optional
+from typing import Any, Iterable, Iterator
 
 import ais
 from ais import nmea
@@ -104,7 +104,7 @@ def VdmLines(lines: Iterable[str]) -> Iterator[str]:
       yield line
 
 
-def Parse(data: str) -> Optional[Dict[str, Any]]:
+def Parse(data: str) -> dict[str, Any] | None:
   """Unpack a NMEA VDM AIS message line(s)."""
 
   if not isinstance(data, str):
@@ -137,11 +137,11 @@ class BareQueue(Queue.Queue):
   """
 
   def __init__(self) -> None:
-    self.groups: Dict[int, Dict[str, Any]] = {}
+    self.groups: dict[int, dict[str, Any]] = {}
     self.line_num: int = 0
     Queue.Queue.__init__(self)
 
-  def put(self, line: str, line_num: Optional[int] = None) -> None:
+  def put(self, line: str, line_num: int | None = None) -> None:
     """Add a line of NMEA or raw text to the queue."""
 
     if line_num is not None:
