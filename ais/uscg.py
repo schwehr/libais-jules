@@ -41,7 +41,7 @@ import hashlib
 import logging
 import queue as Queue
 import re
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 import ais
 from ais import util
@@ -67,7 +67,7 @@ USCG_RE = re.compile(r"""
 )
 """, re.VERBOSE)
 
-NUMERIC_FIELDS: Tuple[str, ...] = (
+NUMERIC_FIELDS: tuple[str, ...] = (
   'counter',
   'hour',
   'minute',
@@ -80,7 +80,7 @@ NUMERIC_FIELDS: Tuple[str, ...] = (
 )
 
 
-def Parse(data: str) -> Optional[Dict[str, Any]]:
+def Parse(data: str) -> dict[str, Any] | None:
   """Unpack a USCG old metadata format line or return None.
 
   Makes sure that the line matches the regex and the checksum matches.
@@ -107,7 +107,7 @@ def Parse(data: str) -> Optional[Dict[str, Any]]:
 
 class UscgQueue(Queue.Queue):
   """Treats NMEA without USCG station in metadata as from rUnknown."""
-  groups: Dict[str, Any]
+  groups: dict[str, Any]
   line_num: int
   unknown_queue: vdm.BareQueue
 
@@ -117,7 +117,7 @@ class UscgQueue(Queue.Queue):
     Queue.Queue.__init__(self)
     self.unknown_queue = vdm.BareQueue()
 
-  def put(self, line: Any, line_num: Optional[int] = None) -> None:  # type: ignore[override]
+  def put(self, line: Any, line_num: int | None = None) -> None:  # type: ignore[override]
     if line_num is not None:
       self.line_num = line_num
     else:
@@ -129,7 +129,7 @@ class UscgQueue(Queue.Queue):
 
     if not match:
       logger.info('not match')
-      msg_dict: Dict[str, Any] = {
+      msg_dict: dict[str, Any] = {
           'line_nums': [self.line_num],
           'lines': [line],
       }
@@ -214,7 +214,7 @@ class UscgQueue(Queue.Queue):
     self.groups.pop(group_id)
 
 
-def DecodeMultiple(message: Dict[str, Any]) -> Optional[Dict[str, Any]]:
+def DecodeMultiple(message: dict[str, Any]) -> dict[str, Any] | None:
   """Decode a message that spans multiple lines."""
   payloads = [msg['payload'] for msg in message['matches']]
 
