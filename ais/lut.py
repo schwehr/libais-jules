@@ -2,7 +2,7 @@
 Lookup tables for AIS status messages
 """
 
-NAV_STATUS = {
+NAV_STATUS: dict[int, str] = {
   0: 'under way using engine',
   1: 'at anchor',
   2: 'not under command',
@@ -21,7 +21,7 @@ NAV_STATUS = {
   15: 'UNKNOWN',
 }
 
-TYPE_AND_CARGO = {
+TYPE_AND_CARGO: dict[int, str] = {
   20: 'Wing in ground (WIG), all ships of this type',
   21: 'Wing in ground (WIG), Hazardous cat A',
   22: 'Wing in ground (WIG), Hazardous cat B',
