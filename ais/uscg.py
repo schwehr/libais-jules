@@ -41,6 +41,7 @@ import hashlib
 import logging
 import queue as Queue
 import re
+from typing import Any
 
 import ais
 from ais import util
@@ -66,7 +67,7 @@ USCG_RE = re.compile(r"""
 )
 """, re.VERBOSE)
 
-NUMERIC_FIELDS = (
+NUMERIC_FIELDS: tuple[str, ...] = (
   'counter',
   'hour',
   'minute',
@@ -79,7 +80,7 @@ NUMERIC_FIELDS = (
 )
 
 
-def Parse(data):
+def Parse(data: str) -> dict[str, Any] | None:
   """Unpack a USCG old metadata format line or return None.
 
   Makes sure that the line matches the regex and the checksum matches.
@@ -91,7 +92,10 @@ def Parse(data):
     A vdm dict or None and a metadata dict or None.
   """
   try:
-    result = USCG_RE.search(data).groupdict()
+    match_obj = USCG_RE.search(data)
+    if not match_obj:
+      return None
+    result = match_obj.groupdict()
   except AttributeError:
     return None
 
@@ -103,14 +107,17 @@ def Parse(data):
 
 class UscgQueue(Queue.Queue):
   """Treats NMEA without USCG station in metadata as from rUnknown."""
+  groups: dict[str, Any]
+  line_num: int
+  unknown_queue: vdm.BareQueue
 
-  def __init__(self):
+  def __init__(self) -> None:
     self.groups = {}
     self.line_num = 0
     Queue.Queue.__init__(self)
     self.unknown_queue = vdm.BareQueue()
 
-  def put(self, line, line_num=None):
+  def put(self, line: Any, line_num: int | None = None) -> None:  # type: ignore[override]
     if line_num is not None:
       self.line_num = line_num
     else:
@@ -122,21 +129,21 @@ class UscgQueue(Queue.Queue):
 
     if not match:
       logger.info('not match')
-      msg = {
+      msg_dict: dict[str, Any] = {
           'line_nums': [self.line_num],
           'lines': [line],
       }
       if metadata_match:
-        msg['match'] = metadata_match
-      Queue.Queue.put(self, msg)
+        msg_dict['match'] = metadata_match
+      Queue.Queue.put(self, msg_dict)
       return
 
     if not metadata_match:
       logger.info('not metadata match')
       self.unknown_queue.put(line)
       if not self.unknown_queue.empty():
-        msg = Queue.Queue.get()
-        self.put(msg)
+        queue_msg = self.unknown_queue.get()
+        self.put(queue_msg)
       return
 
     match.update(metadata_match)
@@ -157,7 +164,7 @@ class UscgQueue(Queue.Queue):
         return
       decoded['md5'] = hashlib.md5(body.encode('utf-8')).hexdigest()
       Queue.Queue.put(self, {
-          'line_nums': [line_num],
+          'line_nums': [self.line_num],
           'lines': [line],
           'decoded': decoded,
           'matches': [match]
@@ -207,7 +214,7 @@ class UscgQueue(Queue.Queue):
     self.groups.pop(group_id)
 
 
-def DecodeMultiple(message):
+def DecodeMultiple(message: dict[str, Any]) -> dict[str, Any] | None:
   """Decode a message that spans multiple lines."""
   payloads = [msg['payload'] for msg in message['matches']]
 
@@ -217,6 +224,6 @@ def DecodeMultiple(message):
   if q.qsize() != 1:
     logger.info('Error: Should get just one message decoded from this: %s',
                  message)
-    return
+    return None
   msg = q.get()
   return msg['decoded']
