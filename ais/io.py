@@ -69,11 +69,12 @@
 
 import codecs
 import sys
+from typing import Any, IO, Iterator
 
 import ais.nmea_queue
 
 
-def open(name, mode='r', **kwargs):
+def open(name: str | IO[Any], mode: str = 'r', **kwargs: Any) -> 'NmeaFile':
   """Open a file containing NMEA and instantiate an instance of `NmeaFile()`.
   Like Python's `open()`, set the `mode` parameter to 'r' for normal reading or
   or 'rU' for opening the file in universal newline mode.
@@ -110,10 +111,10 @@ def open(name, mode='r', **kwargs):
   return NmeaFile(fobj)
 
 
-class NmeaFile:
+class NmeaFile(Iterator[dict[str, Any]]):
   """Provides a file-like object interface to the `ais.nmea_queue` module."""
 
-  def __init__(self, fobj):
+  def __init__(self, fobj: IO[Any]):
     """Construct a parsing stream.
 
     Args:
@@ -121,36 +122,39 @@ class NmeaFile:
     """
 
     self._fobj = fobj
-    self._queue = ais.nmea_queue.NmeaQueue()
+    self._queue: Any | None = ais.nmea_queue.NmeaQueue()
 
   @property
-  def closed(self):
+  def closed(self) -> bool:
     """Is the file-like object from which we are reading open for reading?"""
     return self._fobj.closed
 
   @property
-  def name(self):
+  def name(self) -> str:
     """Name of the file-like object from which we are reading."""
     return self._fobj.name
 
-  def close(self):
+  def close(self) -> None:
     """Close the file-like object from which we are reading and dump what is
     left in the queue."""
     return self._fobj.close()
 
-  def __iter__(self):
+  def __iter__(self) -> 'NmeaFile':
     return self
 
-  def __enter__(self):
+  def __enter__(self) -> 'NmeaFile':
     return self
 
-  def __exit__(self, exc_type, exc_val, exc_tb):
+  def __exit__(self, exc_type: Any, exc_val: Any, exc_tb: Any) -> None:
     # Destroy the queue, which could be a large in-memory object.
     self._queue = None
     return self.close()
 
-  def __next__(self):
+  def __next__(self) -> dict[str, Any]:
     """Return the next decoded AIS message."""
+    if self._queue is None:
+      raise StopIteration
+
     msg = None
     while not msg:
         self._queue.put(next(self._fobj))
