@@ -33,6 +33,7 @@ import datetime
 import logging
 import math
 import re
+from typing import Any
 
 from ais import util
 
@@ -48,7 +49,7 @@ NMEA_CHECKSUM_RE = re.compile(NMEA_CHECKSUM_RE_STR)
 
 
 # TODO(schwehr): Rename TimeUtc.
-def TimeUtc(fields):
+def TimeUtc(fields: dict[str, Any]) -> None:
   seconds, fractional_seconds = FloatSplit(float(fields['seconds']))
   microseconds = int(math.floor(fractional_seconds * 1e6))
 
@@ -60,7 +61,7 @@ def TimeUtc(fields):
   when = datetime.time(
       fields['hours'],
       fields['minutes'],
-      seconds,
+      int(seconds),
       microseconds
   )
   fields['when'] = when
@@ -82,12 +83,15 @@ ABK_RE = re.compile(ABK_RE_STR)
 
 # TODO(schwehr): Document that handlers return None if they fail to match
 #   the line to their message.
-def HandleAbk(line):
+def HandleAbk(line: str) -> dict[str, Any] | None:
   """Decode AIS Addressed and Binary Broadcast Acknowledgement (ABK)."""
   try:
-    fields = ABK_RE.match(line).groupdict()
+    match = ABK_RE.match(line)
+    if not match:
+      return None
+    fields = match.groupdict()
   except TypeError:
-    return
+    return None
 
   result = {
       'message': 'ABK',
@@ -116,12 +120,15 @@ ADS_RE_STR = (
 ADS_RE = re.compile(ADS_RE_STR)
 
 
-def HandleAds(line):
+def HandleAds(line: str) -> dict[str, Any] | None:
   """Decode Automatic Device Status (ADS)."""
   try:
-    fields = ADS_RE.match(line).groupdict()
+    match = ADS_RE.match(line)
+    if not match:
+      return None
+    fields = match.groupdict()
   except TypeError:
-    return
+    return None
 
   TimeUtc(fields)
 
@@ -151,12 +158,15 @@ ALR_RE_STR = (
 ALR_RE = re.compile(ALR_RE_STR)
 
 
-def HandleAlr(line):
+def HandleAlr(line: str) -> dict[str, Any] | None:
   """Decode Set Alarm State (ALR)."""
   try:
-    fields = ALR_RE.match(line).groupdict()
+    match = ALR_RE.match(line)
+    if not match:
+      return None
+    fields = match.groupdict()
   except TypeError:
-    return
+    return None
 
   seconds, fractional_seconds = FloatSplit(float(fields['seconds']))
   microseconds = int(math.floor(fractional_seconds * 1e6))
@@ -164,7 +174,7 @@ def HandleAlr(line):
   when = datetime.time(
       int(fields['hours']),
       int(fields['minutes']),
-      seconds,
+      int(seconds),
       microseconds
   )
 
@@ -201,12 +211,15 @@ BBM_RE_STR = (
 BBM_RE = re.compile(BBM_RE_STR)
 
 
-def HandleBbm(line):
+def HandleBbm(line: str) -> dict[str, Any] | None:
   """Decode Binary Broadcast Message (BBM) sentence."""
   try:
-    fields = BBM_RE.match(line).groupdict()
+    match = BBM_RE.match(line)
+    if not match:
+      return None
+    fields = match.groupdict()
   except TypeError:
-    return
+    return None
 
   result = {
       'message': 'BBM',
@@ -240,11 +253,14 @@ FSR_RE_STR = (
 FSR_RE = re.compile(FSR_RE_STR)
 
 
-def HandleFsr(line):
+def HandleFsr(line: str) -> dict[str, Any] | None:
   try:
-    fields = FSR_RE.match(line).groupdict()
+    match = FSR_RE.match(line)
+    if not match:
+      return None
+    fields = match.groupdict()
   except TypeError:
-    return
+    return None
 
   seconds, fractional_seconds = FloatSplit(float(fields['seconds']))
   microseconds = int(math.floor(fractional_seconds * 1e6))
@@ -252,7 +268,7 @@ def HandleFsr(line):
   when = datetime.time(
       int(fields['hours']),
       int(fields['minutes']),
-      seconds,
+      int(seconds),
       microseconds
   )
 
@@ -293,11 +309,14 @@ GGA_RE_STR = (
 GGA_RE = re.compile(GGA_RE_STR)
 
 
-def HandleGga(line):
+def HandleGga(line: str) -> dict[str, Any] | None:
   try:
-    fields = GGA_RE.match(line).groupdict()
+    match = GGA_RE.match(line)
+    if not match:
+      return None
+    fields = match.groupdict()
   except TypeError:
-    return
+    return None
 
   seconds, fractional_seconds = FloatSplit(float(fields['seconds']))
   microseconds = int(math.floor(fractional_seconds * 1e6))
@@ -305,7 +324,7 @@ def HandleGga(line):
   when = datetime.time(
       int(fields['hours']),
       int(fields['minutes']),
-      seconds,
+      int(seconds),
       microseconds
   )
 
@@ -346,7 +365,7 @@ TXT_RE_STR = (
 TXT_RE = re.compile(TXT_RE_STR)
 
 
-def HandleTxt(line):
+def HandleTxt(line: str) -> dict[str, Any] | None:
   """Decode Text Transmission (TXT).
 
   TODO(schwehr): Handle encoded characters.  e.g. ^21 is a '!'.
@@ -359,9 +378,12 @@ def HandleTxt(line):
     the message.
   """
   try:
-    fields = TXT_RE.match(line).groupdict()
+    match = TXT_RE.match(line)
+    if not match:
+      return None
+    fields = match.groupdict()
   except TypeError:
-    return
+    return None
 
   result = {
       'message': 'TXT',
@@ -392,17 +414,20 @@ ZDA_RE_STR = (
 ZDA_RE = re.compile(ZDA_RE_STR)
 
 
-def FloatSplit(value):
+def FloatSplit(value: float) -> tuple[float, float]:
   base = math.trunc(value)
   fractional = value - base
   return base, fractional
 
 
-def HandleZda(line):
+def HandleZda(line: str) -> dict[str, Any] | None:
   try:
-    fields = ZDA_RE.match(line).groupdict()
+    match = ZDA_RE.match(line)
+    if not match:
+      return None
+    fields = match.groupdict()
   except TypeError:
-    return
+    return None
 
   for field in ('year', 'month', 'day', 'hours', 'minutes', 'zone_hours',
                 'zone_minutes'):
@@ -412,12 +437,12 @@ def HandleZda(line):
   seconds, fractional_seconds = FloatSplit(float(fields['seconds']))
   microseconds = int(math.floor(fractional_seconds * 1e6))
   when = datetime.datetime(
-      fields['year'],
-      fields['month'],
-      fields['day'],
-      fields['hours'],
-      fields['minutes'],
-      seconds,
+      int(fields['year']),
+      int(fields['month']),
+      int(fields['day']),
+      int(fields['hours']),
+      int(fields['minutes']),
+      int(seconds),
       microseconds)
 
   # TODO(schwehr): Convert this to Unix UTC seconds.
@@ -442,7 +467,7 @@ HANDLERS = {
 }
 
 
-def DecodeLine(line):
+def DecodeLine(line: str) -> dict[str, Any] | None:
   """Decode a NMEA line.
 
   Args:
@@ -454,19 +479,22 @@ def DecodeLine(line):
   """
   line = line.rstrip()
   try:
-    sentence = NMEA_SENTENCE_RE.match(line).groupdict()['sentence']
+    match = NMEA_SENTENCE_RE.match(line)
+    if not match:
+      return None
+    sentence = match.groupdict()['sentence']
   except AttributeError:
     # Not NMEA.
-    return
+    return None
 
   if sentence not in HANDLERS:
     logger.info('skipping: %s', line)
-    return
+    return None
 
   try:
     message = HANDLERS[sentence](line)
   except AttributeError:
     logger.info('Unable to decode line with handle: %s', line)
-    return
+    return None
 
   return message
