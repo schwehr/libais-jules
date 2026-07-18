@@ -114,7 +114,7 @@ def open(name: str | IO[Any], mode: str = 'r', **kwargs: Any) -> 'NmeaFile':
 class NmeaFile(Iterator[dict[str, Any]]):
   """Provides a file-like object interface to the `ais.nmea_queue` module."""
 
-  def __init__(self, fobj: IO[Any]) -> None:
+  def __init__(self, fobj: IO[Any]):
     """Construct a parsing stream.
 
     Args:
