@@ -136,7 +136,7 @@ class BareQueue(Queue.Queue):
   sentence are decoded and added to the queue.
   """
 
-  def __init__(self) -> None:
+  def __init__(self):
     self.groups: dict[int, dict[str, Any]] = {}
     self.line_num: int = 0
     Queue.Queue.__init__(self)
