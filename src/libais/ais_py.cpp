@@ -115,18 +115,6 @@ DictSafeSetItem(PyObject *dict, const std::string &key, const char *val) {
 }
 
 
-#if 0
-void
-DictSafeSetItem(PyObject *dict, const std::string &key, const bool val) {
-  PyObject *key_obj = PyUnicode_FromString(key.c_str());
-  PyObject *val_obj = PyBool_FromLong(val);
-  assert(key_obj);
-  assert(val_obj);
-  PyDict_SetItem(dict, key_obj, val_obj);
-  Py_DECREF(key_obj);
-  Py_DECREF(val_obj);
-}
-#else
 void
 DictSafeSetItem(PyObject *dict, const std::string &key, const bool val) {
   if (val) {
@@ -135,7 +123,6 @@ DictSafeSetItem(PyObject *dict, const std::string &key, const bool val) {
     PyDict_SetItemString(dict, key.c_str(), Py_False);
   }
 }
-#endif
 
 void
 DictSafeSetItem(PyObject *dict, const std::string &key, const float val) {
