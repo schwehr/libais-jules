@@ -2,6 +2,36 @@ import unittest
 from ais.stream import checksum
 
 
+class ChecksumStrTest(unittest.TestCase):
+    def test_checksum_str(self):
+        self.assertEqual(
+            checksum.checksumStr("!AIVDM,1,1,,B,35MsUdPOh8JwI:0HUwquiIFH21>i,0*09"),
+            "09",
+        )
+        self.assertEqual(
+            checksum.checksumStr("AIVDM,1,1,,B,35MsUdPOh8JwI:0HUwquiIFH21>i,0"),
+            "09",
+        )
+        self.assertEqual(
+            checksum.checksumStr("?AIVDM,1,1,,B,35MsUdPOh8JwI:0HUwquiIFH21>i,0*09"),
+            "09",
+        )
+        self.assertEqual(
+            checksum.checksumStr("!AIVDM,1,1,,B,35MsUdPOh8JwI:0HUwquiIFH21>i,0*"),
+            "09",
+        )
+
+    def test_checksum_str_newlines(self):
+        self.assertEqual(
+            checksum.checksumStr("!AIVDM,1,1,,B,35MsUdPOh8JwI:0HUwquiIFH21>i,0*09\n"),
+            "09",
+        )
+        self.assertEqual(
+            checksum.checksumStr("!AIVDM,1,1,,B,35MsUdPOh8JwI:0HUwquiIFH21>i,0*09\r\n"),
+            "09",
+        )
+
+
 class ChecksumValidTest(unittest.TestCase):
     def test_valid_checksum(self):
         self.assertTrue(
