@@ -482,7 +482,6 @@ class TxtTest(unittest.TestCase):
         )
 
     def testWithCaret(self):
-        # TODO(schwehr): ^2C should be replaced by a special character in decoding.
         line = "$AITXT,01,01,70,Leaving a DSC Receivable Window^2C Chan A*7E"
         message = nmea_messages.DecodeLine(line)
         self.assertEqual(
@@ -493,9 +492,22 @@ class TxtTest(unittest.TestCase):
                 "sen_tot": 1,
                 "seq_num": 70,
                 "talker": "AI",
-                "text": "Leaving a DSC Receivable Window^2C Chan A",
+                "text": "Leaving a DSC Receivable Window, Chan A",
             },
         )
+
+    def testUnescapeNmeaString(self):
+        self.assertEqual(
+            nmea_messages.UnescapeNmeaString("Leaving a DSC Receivable Window^2C Chan A"),
+            "Leaving a DSC Receivable Window, Chan A",
+        )
+        self.assertEqual(nmea_messages.UnescapeNmeaString("Test ^21 string"), "Test ! string")
+        self.assertEqual(
+            nmea_messages.UnescapeNmeaString("^41^42^43"),
+            "ABC",
+        )
+        self.assertEqual(nmea_messages.UnescapeNmeaString("No carets here"), "No carets here")
+        self.assertIsNone(nmea_messages.UnescapeNmeaString(None))
 
     def testWithSingleDigitSentenceAndSequence(self):
         line = "$AITXT,1,1,007,AIS: UTC clock lost*08"

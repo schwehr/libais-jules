@@ -48,6 +48,17 @@ NMEA_SENTENCE_RE = re.compile(NMEA_SENTENCE_RE_STR)
 NMEA_CHECKSUM_RE = re.compile(NMEA_CHECKSUM_RE_STR)
 
 
+def UnescapeNmeaString(text: str | None) -> str | None:
+    """Unescape ^HH hex escape sequences in NMEA string parameter values."""
+    if text is None:
+        return None
+    return re.sub(
+        r"\^([0-9A-Fa-f]{2})",
+        lambda match: chr(int(match.group(1), 16)),
+        text,
+    )
+
+
 # TODO(schwehr): Rename TimeUtc.
 def TimeUtc(fields: dict[str, Any]) -> None:
     seconds, fractional_seconds = FloatSplit(float(fields["seconds"]))
@@ -170,7 +181,7 @@ def HandleAlr(line: str) -> dict[str, Any] | None:
         "id": fields["id"],
         "message": "ALR",
         "talker": fields["talker"],
-        "text": fields["text"],
+        "text": UnescapeNmeaString(fields["text"]),
         "time": when,
     }
     if fields["ack_state"] in "AV":
@@ -353,8 +364,6 @@ TXT_RE = re.compile(TXT_RE_STR)
 def HandleTxt(line: str) -> dict[str, Any] | None:
     """Decode Text Transmission (TXT).
 
-    TODO(schwehr): Handle encoded characters.  e.g. ^21 is a '!'.
-
     Args:
       line: A string containing a NMEA TXT message.
 
@@ -373,7 +382,7 @@ def HandleTxt(line: str) -> dict[str, Any] | None:
     result = {
         "message": "TXT",
         "talker": fields["talker"],
-        "text": fields["text"],
+        "text": UnescapeNmeaString(fields["text"]),
     }
 
     for field in ("sen_tot", "sen_num", "seq_num"):
