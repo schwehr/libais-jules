@@ -333,7 +333,7 @@ def normalize(
                 if not ok:
                     continue
 
-                payload = "".join([p["payload"] for p in parts])
+                payload = "".join(p["payload"] for p in parts)
                 tagblock = {}
                 for p in reversed(parts):
                     tagblock.update(p["tagblock"])
@@ -378,7 +378,7 @@ def normalize(
                 out_str = (
                     out_str.strip() + "\n"
                 )  # FIX: Why do I have to do this last strip?
-                origstr = "".join([p["origline"] for p in parts])
+                origstr = "".join(p["origline"] for p in parts)
 
                 yield tagblock, out_str, origstr
 
