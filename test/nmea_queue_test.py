@@ -92,7 +92,7 @@ class NmeaQueueTest(unittest.TestCase):
             msgs[0],
             {
                 "decoded": {
-                    "datetime": datetime.datetime(2009, 7, 12, 20, 30, 3),
+                    "timestamp": 1247430603.0,
                     "message": "ZDA",
                     "talker": "GP",
                     "zone_hours": 0,
