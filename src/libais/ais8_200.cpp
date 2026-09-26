@@ -95,8 +95,7 @@ Ais8_200_21::Ais8_200_21(const char *nmea_payload, const size_t pad)
 // RTA report
 Ais8_200_22::Ais8_200_22(const char *nmea_payload, const size_t pad)
     : Ais8(nmea_payload, pad), rta_month(0), rta_day(0), rta_hour(0),
-      rta_minute(0) // TODO : add missing fields
-{
+      rta_minute(0), lock_status(0), spare2(0) {
   assert(dac == 200);
   assert(fi == 22);
 
