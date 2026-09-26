@@ -409,38 +409,39 @@ def HandleZda(line: str) -> dict[str, Any] | None:
         if not match:
             return None
         fields = match.groupdict()
-    except TypeError:
+
+        for field in (
+            "year",
+            "month",
+            "day",
+            "hours",
+            "minutes",
+            "zone_hours",
+            "zone_minutes",
+        ):
+            if fields[field] is not None and fields[field]:
+                fields[field] = util.MaybeToNumber(fields[field])
+
+        seconds, fractional_seconds = FloatSplit(float(fields["seconds"]))
+        microseconds = int(math.floor(fractional_seconds * 1e6))
+        when = datetime.datetime(
+            int(fields["year"]),
+            int(fields["month"]),
+            int(fields["day"]),
+            int(fields["hours"]),
+            int(fields["minutes"]),
+            int(seconds),
+            microseconds,
+            tzinfo=datetime.timezone.utc,
+        )
+        timestamp = when.timestamp()
+    except (TypeError, ValueError, KeyError):
         return None
 
-    for field in (
-        "year",
-        "month",
-        "day",
-        "hours",
-        "minutes",
-        "zone_hours",
-        "zone_minutes",
-    ):
-        if fields[field] is not None and fields[field]:
-            fields[field] = util.MaybeToNumber(fields[field])
-
-    seconds, fractional_seconds = FloatSplit(float(fields["seconds"]))
-    microseconds = int(math.floor(fractional_seconds * 1e6))
-    when = datetime.datetime(
-        int(fields["year"]),
-        int(fields["month"]),
-        int(fields["day"]),
-        int(fields["hours"]),
-        int(fields["minutes"]),
-        int(seconds),
-        microseconds,
-    )
-
-    # TODO(schwehr): Convert this to Unix UTC seconds.
     return {
         "message": "ZDA",
         "talker": fields["talker"],
-        "datetime": when,
+        "timestamp": timestamp,
         "zone_hours": fields["zone_hours"],
         "zone_minutes": fields["zone_minutes"],
     }

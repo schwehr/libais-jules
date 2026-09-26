@@ -542,12 +542,18 @@ class ZdaTest(unittest.TestCase):
             message,
             {
                 "message": "ZDA",
-                "datetime": datetime.datetime(2009, 4, 30, 8, 20, 15, 700),
+                "timestamp": 1241079615.0007,
                 "talker": "IN",
                 "zone_hours": None,
                 "zone_minutes": None,
             },
         )
+
+    def testDecodeInvalid(self):
+        line = "$INZDA,,,,,,*73"
+        self.assertIsNone(nmea_messages.DecodeLine(line))
+        line = "$INZDA,082015.0007,31,02,2009,,*73"
+        self.assertIsNone(nmea_messages.DecodeLine(line))
 
 
 class NonNmeaTest(unittest.TestCase):
